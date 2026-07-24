@@ -4,6 +4,24 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement, value: string): void {
+  // React overrides the value setter on controlled inputs; setting .value
+  // directly via assignment is intercepted by React's tracker in dev and
+  // ignored in prod for controlled components. Use the native prototype setter
+  // then dispatch an InputEvent so framework state stays in sync.
+  const proto = el instanceof HTMLInputElement ? HTMLInputElement.prototype : HTMLTextAreaElement.prototype;
+  const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+  if (setter) {
+    setter.call(el, value);
+  } else {
+    el.value = value;
+  }
+}
+
+function dispatchInput(el: HTMLInputElement | HTMLTextAreaElement): void {
+  el.dispatchEvent(new InputEvent("input", { bubbles: true, data: null, inputType: "insertText" }));
+}
+
 function getTextBeforeCaretContenteditable(el: HTMLElement): string {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return "";
@@ -67,8 +85,8 @@ function findDomPoint(el: HTMLElement, charOffset: number): { node: Node; offset
 export function getTokenBeforeCaret(el: HTMLElement, kind: EditorKind, trigger: string): TokenContext | null {
   let before: string;
   let caretPos: number;
-  if (kind === "textarea") {
-    const ta = el as HTMLTextAreaElement;
+  if (kind === "textarea" || kind === "input") {
+    const ta = el as HTMLTextAreaElement | HTMLInputElement;
     caretPos = ta.selectionStart ?? 0;
     before = ta.value.slice(0, caretPos);
   } else {
@@ -85,8 +103,8 @@ export function getTokenBeforeCaret(el: HTMLElement, kind: EditorKind, trigger: 
 }
 
 export function replaceToken(el: HTMLElement, kind: EditorKind, token: TokenContext, replacement: string): boolean {
-  if (kind === "textarea") {
-    const ta = el as HTMLTextAreaElement;
+  if (kind === "textarea" || kind === "input") {
+    const ta = el as HTMLTextAreaElement | HTMLInputElement;
     const pos = ta.selectionStart ?? 0;
     const before = ta.value.slice(0, pos);
     const after = ta.value.slice(pos);
@@ -94,11 +112,12 @@ export function replaceToken(el: HTMLElement, kind: EditorKind, token: TokenCont
     const m = before.match(re);
     if (!m) return false;
     const tokenStart = pos - m[0].length;
-    ta.value = ta.value.slice(0, tokenStart) + replacement + after;
+    const newValue = ta.value.slice(0, tokenStart) + replacement + after;
+    setNativeValue(ta, newValue);
     const newPos = tokenStart + replacement.length;
     ta.focus();
     ta.setSelectionRange(newPos, newPos);
-    ta.dispatchEvent(new Event("input", { bubbles: true }));
+    dispatchInput(ta);
     return true;
   }
 
@@ -133,37 +152,3 @@ export function replaceToken(el: HTMLElement, kind: EditorKind, token: TokenCont
   return true;
 }
 
-export function insertTextAtCaret(el: HTMLElement, kind: EditorKind, text: string): boolean {
-  if (kind === "textarea") {
-    const ta = el as HTMLTextAreaElement;
-    const start = ta.selectionStart ?? 0;
-    const end = ta.selectionEnd ?? 0;
-    ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
-    const newPos = start + text.length;
-    ta.focus();
-    ta.setSelectionRange(newPos, newPos);
-    ta.dispatchEvent(new Event("input", { bubbles: true }));
-    return true;
-  }
-
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return false;
-  let ok = false;
-  try {
-    ok = document.execCommand("insertText", false, text);
-  } catch {
-    ok = false;
-  }
-  if (!ok) {
-    const range = sel.getRangeAt(0);
-    range.deleteContents();
-    const tn = document.createTextNode(text);
-    range.insertNode(tn);
-    range.setStartAfter(tn);
-    range.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  }
-  return true;
-}

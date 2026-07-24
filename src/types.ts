@@ -1,10 +1,12 @@
 export type Mappings = Record<string, string>;
 
+export type Theme = "light" | "dark" | "auto";
+
 export interface Settings {
   trigger: string;
   caseSensitive: boolean;
-  fabEnabled: boolean;
   globalEnabledByDefault: boolean;
+  theme: Theme;
 }
 
 export type SiteOverrides = Record<string, boolean>;
@@ -12,8 +14,8 @@ export type SiteOverrides = Record<string, boolean>;
 export const DEFAULT_SETTINGS: Settings = {
   trigger: "@",
   caseSensitive: false,
-  fabEnabled: true,
   globalEnabledByDefault: true,
+  theme: "auto",
 };
 
 export const STORAGE_KEYS = {
@@ -39,7 +41,7 @@ export interface ImportResult {
   imported?: { mappings: number; siteOverrides: number };
 }
 
-export type EditorKind = "textarea" | "contenteditable";
+export type EditorKind = "textarea" | "contenteditable" | "input";
 
 export interface EditorTarget {
   el: HTMLElement;

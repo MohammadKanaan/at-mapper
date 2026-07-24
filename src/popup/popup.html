@@ -9,50 +9,71 @@
   <body>
     <div class="popup" id="popup">
       <header class="header">
-        <span class="title">@-Mapper</span>
-        <span class="host-badge" id="hostBadge"></span>
+        <h1 class="title">@-Mapper</h1>
+        <div class="header-actions">
+          <span class="host-badge" id="hostBadge"></span>
+          <button class="theme-toggle" id="themeToggle" type="button" title="Change theme" aria-label="Change theme">System</button>
+        </div>
       </header>
 
-      <section class="site-section">
-        <label class="toggle" id="siteToggle" for="siteToggleInput">
-          <span class="toggle__switch">
-            <input id="siteToggleInput" type="checkbox" />
-            <span class="toggle__slider"></span>
-          </span>
-          <span class="toggle__label" id="siteToggleLabel"></span>
+      <section class="site-section" id="siteSection">
+        <label class="switch" for="siteToggleInput">
+          <input id="siteToggleInput" type="checkbox" aria-labelledby="siteToggleLabel" aria-describedby="siteStatus" />
+          <span class="slider" aria-hidden="true"></span>
         </label>
-        <div class="site-status" id="siteStatus"></div>
+        <div class="site-info">
+          <span class="site-info__label" id="siteToggleLabel"></span>
+          <span class="site-info__status" id="siteStatus"></span>
+        </div>
+      </section>
+
+      <section class="add-section">
+        <div class="field-row add-row">
+          <div class="text-field grow">
+            <label class="sr-only" for="newKey">Shortcut</label>
+            <input id="newKey" type="text" placeholder="@word" autocomplete="off" />
+          </div>
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="text-field grow">
+            <label class="sr-only" for="newVal">Replacement text</label>
+            <input id="newVal" type="text" placeholder="replacement" autocomplete="off" />
+          </div>
+          <button class="btn btn-primary" id="addBtn" type="button">Add</button>
+        </div>
       </section>
 
       <section class="search-section">
-        <input
-          id="searchInput"
-          class="search"
-          type="text"
-          placeholder="Search mappings…"
-          autocomplete="off"
-        />
+        <div class="search-wrap">
+          <label class="sr-only" for="searchInput">Search mappings</label>
+          <input
+            id="searchInput"
+            class="search"
+            type="text"
+            placeholder="Search mappings…"
+            autocomplete="off"
+          />
+          <span class="count" id="mappingCount"></span>
+        </div>
       </section>
 
       <section class="list-section">
         <ul class="mappings" id="mappingsList"></ul>
-        <div class="empty" id="emptyState">No mappings match your search.</div>
+        <div class="empty" id="emptyState"></div>
       </section>
-
-      <hr class="divider" />
 
       <section class="actions">
-        <button class="btn btn--primary" id="exportBtn" type="button">Export</button>
-        <button class="btn" id="importBtn" type="button">Import</button>
+        <button class="btn btn-secondary" id="exportBtn" type="button">Export</button>
+        <button class="btn btn-secondary" id="importBtn" type="button">Import</button>
         <input id="importFile" class="sr-only" type="file" accept="application/json" />
-        <button class="btn btn--ghost" id="optionsBtn" type="button">Open options</button>
+        <button class="btn btn-ghost" id="optionsBtn" type="button">Settings</button>
       </section>
 
-      <footer class="footer">
-        <button class="link" id="footerOptions" type="button">Manage all settings →</button>
-      </footer>
-
       <div class="status" id="statusMsg" aria-live="polite"></div>
+
+      <div class="toast" id="undoToast" aria-live="polite">
+        <span class="toast__text" id="undoText"></span>
+        <button class="toast__btn" id="undoBtn" type="button">Undo</button>
+      </div>
     </div>
 
     <script type="module" src="popup.js"></script>

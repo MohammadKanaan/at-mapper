@@ -9,35 +9,45 @@ const CARET_MIRROR_PROPS = [
   "textIndent", "textDecoration", "letterSpacing", "wordSpacing", "tabSize",
 ];
 
-function getCaretCoordsTextarea(textarea: HTMLTextAreaElement, position: number): CaretCoords {
+function buildMirror(src: HTMLTextAreaElement | HTMLInputElement, position: number, wrap: boolean): { coords: { left: number; top: number }; lh: number } {
   const div = document.createElement("div");
-  const style = getComputedStyle(textarea);
+  const style = getComputedStyle(src);
   const span = document.createElement("span");
   let coords = { left: 0, top: 0 };
   try {
     Object.assign(div.style, {
       position: "absolute",
-      whiteSpace: "pre-wrap",
+      whiteSpace: wrap ? "pre-wrap" : "pre",
       visibility: "hidden",
     });
     CARET_MIRROR_PROPS.forEach((p) => {
       const v = style.getPropertyValue(p.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase()));
       div.style.setProperty(p, v);
     });
-    div.textContent = textarea.value.slice(0, position);
-    span.textContent = textarea.value.slice(position) || ".";
+    div.textContent = src.value.slice(0, position);
+    span.textContent = src.value.slice(position) || ".";
     div.appendChild(span);
     document.body.appendChild(div);
-    const rect = textarea.getBoundingClientRect();
+    const rect = src.getBoundingClientRect();
     const spanRect = span.getBoundingClientRect();
     coords = {
-      left: rect.left + spanRect.left - div.getBoundingClientRect().left + textarea.scrollLeft,
-      top: rect.top + spanRect.top - div.getBoundingClientRect().top - textarea.scrollTop,
+      left: rect.left + spanRect.left - div.getBoundingClientRect().left + src.scrollLeft,
+      top: rect.top + spanRect.top - div.getBoundingClientRect().top - src.scrollTop,
     };
   } finally {
     if (div.parentNode) div.parentNode.removeChild(div);
   }
   const lh = parseFloat(style.lineHeight) || 18;
+  return { coords, lh };
+}
+
+function getCaretCoordsTextarea(textarea: HTMLTextAreaElement, position: number): CaretCoords {
+  const { coords, lh } = buildMirror(textarea, position, true);
+  return { left: coords.left, top: coords.top, bottom: coords.top + lh, height: lh };
+}
+
+function getCaretCoordsInput(input: HTMLInputElement, position: number): CaretCoords {
+  const { coords, lh } = buildMirror(input, position, false);
   return { left: coords.left, top: coords.top, bottom: coords.top + lh, height: lh };
 }
 
@@ -68,7 +78,6 @@ function getCaretCoordsContenteditable(el: HTMLElement): CaretCoords {
     if (probeRect.width > 0) {
       rect = probeRect;
     } else {
-      // Zero-width-space probe: insert a ZWSP temporarily to measure the caret.
       const zws = document.createTextNode("\uFEFF");
       range.insertNode(zws);
       const zwsRect = range.getBoundingClientRect();
@@ -89,12 +98,15 @@ export function getCaretCoords(el: HTMLElement, kind: EditorKind, pos: number): 
   if (kind === "textarea") {
     return getCaretCoordsTextarea(el as HTMLTextAreaElement, pos);
   }
+  if (kind === "input") {
+    return getCaretCoordsInput(el as HTMLInputElement, pos);
+  }
   return getCaretCoordsContenteditable(el);
 }
 
 export function getCaretPos(el: HTMLElement, kind: EditorKind): number {
-  if (kind === "textarea") {
-    return (el as HTMLTextAreaElement).selectionStart ?? 0;
+  if (kind === "textarea" || kind === "input") {
+    return (el as HTMLTextAreaElement | HTMLInputElement).selectionStart ?? 0;
   }
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return 0;

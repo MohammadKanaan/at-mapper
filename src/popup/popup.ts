@@ -4,32 +4,98 @@ import {
   loadMappings,
   loadSettings,
   loadSiteOverrides,
+  saveMappings,
   saveSiteOverrides,
+  saveSettings,
   exportToFile,
   importFromFile,
   onStorageChanged,
 } from "../storage.js";
-import { DEFAULT_SETTINGS, type Mappings, type Settings, type SiteOverrides } from "../types.js";
+import { DEFAULT_SETTINGS, type Mappings, type Settings, type SiteOverrides, type Theme } from "../types.js";
+import { stripAt } from "../shared/text.js";
+import { applyTheme, themeLabel, themeName } from "../shared/theme.js";
+import {
+  filterAndSortMappings,
+  createEditFields,
+  getMappingEmptyMessage,
+  getNewMappingError,
+} from "../shared/mappings.js";
+import { makeUndoToast, type UndoToast } from "../shared/undo-toast.js";
 
 const hostBadge = document.getElementById("hostBadge") as HTMLSpanElement;
 const siteToggleInput = document.getElementById("siteToggleInput") as HTMLInputElement;
 const siteToggleLabel = document.getElementById("siteToggleLabel") as HTMLSpanElement;
-const siteStatus = document.getElementById("siteStatus") as HTMLDivElement;
+const siteStatus = document.getElementById("siteStatus") as HTMLSpanElement;
+const newKey = document.getElementById("newKey") as HTMLInputElement;
+const newVal = document.getElementById("newVal") as HTMLInputElement;
+const addBtn = document.getElementById("addBtn") as HTMLButtonElement;
 const searchInput = document.getElementById("searchInput") as HTMLInputElement;
+const mappingCount = document.getElementById("mappingCount") as HTMLSpanElement;
 const mappingsList = document.getElementById("mappingsList") as HTMLUListElement;
 const emptyState = document.getElementById("emptyState") as HTMLDivElement;
 const exportBtn = document.getElementById("exportBtn") as HTMLButtonElement;
 const importBtn = document.getElementById("importBtn") as HTMLButtonElement;
 const importFile = document.getElementById("importFile") as HTMLInputElement;
 const optionsBtn = document.getElementById("optionsBtn") as HTMLButtonElement;
-const footerOptions = document.getElementById("footerOptions") as HTMLButtonElement;
 const statusMsg = document.getElementById("statusMsg") as HTMLDivElement;
+const undoToast = document.getElementById("undoToast") as HTMLDivElement;
+const undoText = document.getElementById("undoText") as HTMLSpanElement;
+const undoBtn = document.getElementById("undoBtn") as HTMLButtonElement;
+const themeToggle = document.getElementById("themeToggle") as HTMLButtonElement;
 
 let settings: Settings | null = null;
 let siteOverrides: SiteOverrides = {};
 let mappings: Mappings = {};
 let hostname = "";
 let statusTimeout: number | null = null;
+let lastDeleted: { key: string; value: string } | null = null;
+let editingKey: string | null = null;
+let systemDarkQuery: MediaQueryList | null = null;
+let undoToastCtrl: UndoToast | null = null;
+
+type IconName = "edit" | "delete" | "save" | "cancel";
+
+const ICON_PATHS: Record<IconName, string> = {
+  edit: "M4 15.5V20h4.5L18.8 9.7l-4.5-4.5L4 15.5Zm17.7-9.8a1 1 0 0 0 0-1.4l-2-2a1 1 0 0 0-1.4 0l-2.4 2.4 4.5 4.5 2.3-2.5Z",
+  delete: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12Zm3-9h2v8H9v-8Zm4 0h2v8h-2v-8Zm2.5-6-1-1h-5l-1 1H5v2h14V4h-3.5Z",
+  save: "m9.2 16.2-4.4-4.4-1.4 1.4L9.2 19 21 7.2l-1.4-1.4L9.2 16.2Z",
+  cancel: "m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5Z",
+};
+
+function setIconButton(button: HTMLButtonElement, icon: IconName, label: string): void {
+  button.replaceChildren();
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", ICON_PATHS[icon]);
+  svg.appendChild(path);
+  button.appendChild(svg);
+}
+
+function applyThemeToDoc(theme: Theme): void {
+  const resolved = applyTheme(document, theme, systemDarkQuery);
+  updateThemeToggle(theme, resolved);
+}
+
+function updateThemeToggle(theme: Theme, resolved: "light" | "dark"): void {
+  themeToggle.textContent = themeName(theme);
+  themeToggle.title = themeLabel(theme, resolved);
+  themeToggle.setAttribute("aria-label", themeLabel(theme, resolved));
+}
+
+function cycleTheme(): void {
+  if (!settings) return;
+  const order: Theme[] = ["auto", "light", "dark"];
+  const current = settings.theme;
+  const idx = order.indexOf(current);
+  const next = order[(idx + 1) % order.length];
+  settings = { ...settings, theme: next };
+  void saveSettings(settings);
+  applyThemeToDoc(next);
+}
 
 function truncateHost(host: string): string {
   return host.length > 28 ? `${host.slice(0, 25)}…` : host;
@@ -53,78 +119,241 @@ function getCurrentTabHostname(): Promise<string> {
   });
 }
 
+function getFilteredEntries(): [string, string][] {
+  return filterAndSortMappings(mappings, searchInput.value);
+}
+
 function renderToggle(): void {
   if (!hostname) {
     hostBadge.textContent = "";
-    siteToggleLabel.textContent = "Not applicable on this page";
-    siteStatus.textContent = "";
+    siteToggleLabel.textContent = "Unavailable on this page";
+    siteStatus.textContent = "Open a regular website to change its setting.";
     siteToggleInput.checked = false;
     siteToggleInput.disabled = true;
     return;
   }
 
   hostBadge.textContent = truncateHost(hostname);
+  hostBadge.title = hostname;
   const enabled = isSiteEnabled(settings ?? DEFAULT_SETTINGS, siteOverrides, hostname);
   siteToggleInput.checked = enabled;
   siteToggleInput.disabled = false;
-  siteToggleLabel.textContent = `Enabled on ${hostname}`;
+  siteToggleLabel.textContent = "Use on this site";
 
   const rawOverride = siteOverrides[hostname];
   let statusText: string;
-  if (rawOverride === true) statusText = "Enabled for this site";
-  else if (rawOverride === false) statusText = "Disabled for this site";
-  else if (settings?.globalEnabledByDefault) statusText = "Globally enabled";
-  else statusText = "Globally disabled";
+  if (rawOverride === true) statusText = "Custom setting: enabled";
+  else if (rawOverride === false) statusText = "Custom setting: disabled";
+  else if (settings?.globalEnabledByDefault) statusText = "Following global setting: enabled";
+  else statusText = "Following global setting: disabled";
   siteStatus.textContent = statusText;
 }
 
-function renderMappings(): void {
-  const query = searchInput.value.trim().toLowerCase();
-  const entries = Object.entries(mappings).filter(([key, value]) => {
-    if (!query) return true;
-    return key.toLowerCase().includes(query) || value.toLowerCase().includes(query);
+function updateCount(filtered: number, total: number): void {
+  const query = searchInput.value.trim();
+  if (query && filtered !== total) {
+    mappingCount.textContent = `${filtered} of ${total}`;
+  } else {
+    mappingCount.textContent = `${total} mapping${total === 1 ? "" : "s"}`;
+  }
+}
+
+function createDisplayRow(key: string, value: string): HTMLLIElement {
+  const li = document.createElement("li");
+  li.className = "mapping";
+  li.dataset.key = key;
+
+  const main = document.createElement("div");
+  main.className = "mapping__main";
+
+  const keySpan = document.createElement("span");
+  keySpan.className = "mapping__key";
+  keySpan.textContent = `@${key}`;
+
+  const sep = document.createElement("span");
+  sep.className = "mapping__sep";
+  sep.textContent = "→";
+  sep.setAttribute("aria-hidden", "true");
+
+  const valSpan = document.createElement("span");
+  valSpan.className = "mapping__val";
+  valSpan.textContent = value;
+  valSpan.title = value;
+
+  main.append(keySpan, sep, valSpan);
+
+  const actions = document.createElement("div");
+  actions.className = "mapping__actions";
+
+  const editBtn = document.createElement("button");
+  editBtn.type = "button";
+  editBtn.className = "btn btn-icon btn-edit";
+  setIconButton(editBtn, "edit", `Edit @${key}`);
+  editBtn.addEventListener("click", () => startEdit(key));
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "btn btn-icon btn-delete";
+  setIconButton(deleteBtn, "delete", `Delete @${key}`);
+  deleteBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    void deleteMapping(key);
   });
 
-  mappingsList.innerHTML = "";
+  actions.append(editBtn, deleteBtn);
+  li.append(main, actions);
+  return li;
+}
+
+function createEditRow(key: string, value: string): HTMLLIElement {
+  const li = document.createElement("li");
+  li.className = "mapping mapping--editing";
+  li.dataset.key = key;
+
+  const row = document.createElement("div");
+  row.className = "edit-row";
+
+  const keyField = document.createElement("div");
+  keyField.className = "text-field";
+
+  const arrow = document.createElement("span");
+  arrow.className = "arrow";
+  arrow.textContent = "→";
+  arrow.setAttribute("aria-hidden", "true");
+
+  const valField = document.createElement("div");
+  valField.className = "text-field";
+
+  const fields = createEditFields({
+    key,
+    value,
+    mappings,
+    onSaved: async (newKeyName, newValue) => {
+      const next: Mappings = { ...mappings };
+      if (newKeyName !== key) delete next[key];
+      next[newKeyName] = newValue;
+      mappings = next;
+      await saveMappings(mappings);
+      cancelEdit();
+    },
+    onCancelled: cancelEdit,
+  });
+  fields.keyInput.setAttribute("aria-label", "Shortcut");
+  fields.valInput.setAttribute("aria-label", "Replacement text");
+  keyField.appendChild(fields.keyInput);
+  valField.appendChild(fields.valInput);
+
+  const actions = document.createElement("div");
+  actions.className = "mapping__actions";
+
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.className = "btn btn-icon btn-save";
+  setIconButton(saveBtn, "save", `Save @${key}`);
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "btn btn-icon btn-delete";
+  setIconButton(cancelBtn, "cancel", `Cancel editing @${key}`);
+
+  actions.append(saveBtn, cancelBtn);
+  row.append(keyField, arrow, valField, actions);
+  li.appendChild(row);
+
+  saveBtn.addEventListener("click", () => void fields.save());
+  cancelBtn.addEventListener("click", fields.cancel);
+
+  requestAnimationFrame(() => fields.focus());
+
+  return li;
+}
+
+function renderMappings(): void {
+  const entries = getFilteredEntries();
+  const total = Object.keys(mappings).length;
+  updateCount(entries.length, total);
+
+  mappingsList.replaceChildren();
 
   if (entries.length === 0) {
+    emptyState.textContent = getMappingEmptyMessage(total, searchInput.value);
     emptyState.classList.add("empty--visible");
     return;
   }
   emptyState.classList.remove("empty--visible");
 
   for (const [key, value] of entries) {
-    const li = document.createElement("li");
-    li.className = "mapping";
-
-    const keySpan = document.createElement("span");
-    keySpan.className = "mapping__key";
-    keySpan.textContent = `@${key}`;
-
-    const sep = document.createElement("span");
-    sep.className = "mapping__sep";
-    sep.textContent = "→";
-
-    const valSpan = document.createElement("span");
-    valSpan.className = "mapping__val";
-    valSpan.textContent = value;
-    valSpan.title = value;
-
-    li.append(keySpan, sep, valSpan);
-    mappingsList.appendChild(li);
+    const row = editingKey === key ? createEditRow(key, value) : createDisplayRow(key, value);
+    mappingsList.appendChild(row);
   }
 }
 
-async function initData(): Promise<void> {
-  const [loadedSettings, loadedOverrides, loadedMappings] = await Promise.all([
-    loadSettings(),
-    loadSiteOverrides(),
-    loadMappings(),
-  ]);
-  settings = loadedSettings;
-  siteOverrides = loadedOverrides;
-  mappings = loadedMappings;
-  hostname = await getCurrentTabHostname();
+function startEdit(key: string): void {
+  if (editingKey === key) return;
+  editingKey = key;
+  renderMappings();
+}
+
+function cancelEdit(): void {
+  editingKey = null;
+  renderMappings();
+}
+
+async function addMapping(): Promise<void> {
+  const key = stripAt(newKey.value);
+  const val = newVal.value.trim();
+  const trigger = settings?.trigger ?? DEFAULT_SETTINGS.trigger;
+  const error = getNewMappingError(mappings, key, val, trigger);
+  if (error) {
+    newKey.classList.add("invalid");
+    newKey.setAttribute("aria-invalid", "true");
+    showStatus(error, true);
+    return;
+  }
+  newKey.classList.remove("invalid");
+  newKey.removeAttribute("aria-invalid");
+  mappings = { ...mappings, [key]: val };
+  await saveMappings(mappings);
+  newKey.value = "";
+  newVal.value = "";
+  newKey.focus();
+  renderMappings();
+}
+
+async function deleteMapping(key: string): Promise<void> {
+  const value = mappings[key];
+  if (value === undefined) return;
+  const next: Mappings = { ...mappings };
+  delete next[key];
+  mappings = next;
+  await saveMappings(mappings);
+  if (editingKey === key) editingKey = null;
+  showUndo(key, value);
+  renderMappings();
+}
+
+function showUndo(key: string, value: string): void {
+  lastDeleted = { key, value };
+  undoText.textContent = `Deleted @${key}`;
+  undoToastCtrl?.show();
+}
+
+function hideUndo(): void {
+  undoToastCtrl?.hide();
+  lastDeleted = null;
+}
+
+async function undoDelete(): Promise<void> {
+  if (!lastDeleted) return;
+  const { key, value } = lastDeleted;
+  if (mappings[key] !== undefined) {
+    hideUndo();
+    return;
+  }
+  mappings = { ...mappings, [key]: value };
+  await saveMappings(mappings);
+  hideUndo();
+  renderMappings();
 }
 
 function showStatus(text: string, isError: boolean): void {
@@ -151,7 +380,7 @@ async function handleToggle(): Promise<void> {
 async function handleExport(): Promise<void> {
   try {
     await exportToFile();
-    showStatus("Exported!", false);
+    showStatus("Export complete.", false);
   } catch (e) {
     showStatus(e instanceof Error ? e.message : "Export failed", true);
   }
@@ -162,32 +391,84 @@ async function handleImport(file: File | null): Promise<void> {
   const result = await importFromFile(file, "merge");
   if (result.ok) {
     showStatus(`Imported ${result.imported?.mappings ?? 0} mappings.`, false);
+    mappings = await loadMappings();
+    renderMappings();
   } else {
     showStatus(result.error ?? "Import failed", true);
   }
+  importFile.value = "";
 }
 
 function openOptions(): void {
   b.runtime.openOptionsPage();
 }
 
+async function initData(): Promise<void> {
+  const [loadedSettings, loadedOverrides, loadedMappings] = await Promise.all([
+    loadSettings(),
+    loadSiteOverrides(),
+    loadMappings(),
+  ]);
+  settings = loadedSettings;
+  siteOverrides = loadedOverrides;
+  mappings = loadedMappings;
+  hostname = await getCurrentTabHostname();
+}
+
 async function init(): Promise<void> {
   await initData();
+  systemDarkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  applyThemeToDoc(settings?.theme ?? DEFAULT_SETTINGS.theme);
+  systemDarkQuery.addEventListener("change", () => {
+    if (settings) applyThemeToDoc(settings.theme);
+  });
+  undoToastCtrl = makeUndoToast({
+    toastEl: undoToast,
+    visibleClass: "toast--visible",
+    durationMs: 4000,
+    onExpire: () => {
+      lastDeleted = null;
+    },
+  });
   renderToggle();
   renderMappings();
 
-  siteToggleInput.addEventListener("change", handleToggle);
+  siteToggleInput.addEventListener("change", () => void handleToggle());
+  addBtn.addEventListener("click", () => void addMapping());
+  themeToggle.addEventListener("click", cycleTheme);
+  newKey.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      newVal.focus();
+    }
+  });
+  newVal.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void addMapping();
+    }
+  });
+  const clearAddError = () => {
+    newKey.value = stripAt(newKey.value);
+    newKey.classList.remove("invalid");
+    newKey.removeAttribute("aria-invalid");
+  };
+  newKey.addEventListener("input", clearAddError);
+  newVal.addEventListener("input", clearAddError);
   searchInput.addEventListener("input", renderMappings);
   exportBtn.addEventListener("click", handleExport);
   importBtn.addEventListener("click", () => importFile.click());
-  importFile.addEventListener("change", () => handleImport(importFile.files?.[0] ?? null));
+  importFile.addEventListener("change", () => void handleImport(importFile.files?.[0] ?? null));
   optionsBtn.addEventListener("click", openOptions);
-  footerOptions.addEventListener("click", openOptions);
+  undoBtn.addEventListener("click", () => void undoDelete());
 
   onStorageChanged((changes) => {
     if (changes.mappings !== undefined) mappings = changes.mappings;
     if (changes.siteOverrides !== undefined) siteOverrides = changes.siteOverrides;
-    if (changes.settings !== undefined) settings = changes.settings;
+    if (changes.settings !== undefined) {
+      settings = changes.settings;
+      applyThemeToDoc(settings.theme);
+    }
     renderToggle();
     renderMappings();
   });

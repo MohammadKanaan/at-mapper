@@ -1,5 +1,11 @@
 import type { EditorTarget, EditorKind } from "./types.js";
 
+// Per the HTML spec, only these input types support the selection API
+// (selectionStart/setSelectionRange), which our token detection relies on.
+// Exclude password for UX/security, and email/number because they throw on
+// selection access. YouTube/Google search inputs are type="text"/"search".
+const TEXT_INPUT_TYPES = new Set(["text", "search", "url", "tel", ""]);
+
 function isOurUI(el: Element): boolean {
   if (el.id.startsWith("atm-")) return true;
   if (el instanceof HTMLElement) {
@@ -18,14 +24,17 @@ function isContentEditable(el: HTMLElement): boolean {
 }
 
 function isVisible(el: HTMLElement): boolean {
-  if (el.tagName === "TEXTAREA") {
-    return el.offsetParent !== null || getComputedStyle(el).position === "fixed";
-  }
   return el.offsetParent !== null || getComputedStyle(el).position === "fixed";
+}
+
+function isTextInput(el: HTMLInputElement): boolean {
+  const type = (el.type || "text").toLowerCase();
+  return TEXT_INPUT_TYPES.has(type);
 }
 
 function kindOf(el: HTMLElement): EditorKind | null {
   if (el.tagName === "TEXTAREA") return "textarea";
+  if (el instanceof HTMLInputElement && isTextInput(el)) return "input";
   if (isContentEditable(el)) return "contenteditable";
   return null;
 }
@@ -39,6 +48,7 @@ export function findEditors(root: ParentNode = document.body): EditorTarget[] {
   candidates.push(...root.querySelectorAll('[contenteditable=""]'));
   candidates.push(...root.querySelectorAll('[contenteditable="true"]'));
   candidates.push(...root.querySelectorAll('[role="textbox"]'));
+  candidates.push(...root.querySelectorAll("input"));
 
   for (const cand of candidates) {
     if (!(cand instanceof HTMLElement)) continue;
@@ -55,11 +65,6 @@ export function findEditors(root: ParentNode = document.body): EditorTarget[] {
   return found;
 }
 
-export function isEditableTarget(el: EventTarget | null): el is HTMLElement {
-  if (!(el instanceof HTMLElement)) return false;
-  if (isOurUI(el)) return false;
-  return kindOf(el) !== null;
-}
 
 export function observeEditors(onChange: (targets: EditorTarget[]) => void): () => void {
   let scheduled = false;

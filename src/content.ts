@@ -1,16 +1,15 @@
-import { b } from "./browser.js";
 import {
   loadMappings,
   loadSettings,
   loadSiteOverrides,
   saveMappings,
-  saveSettings,
   onStorageChanged,
 } from "./storage.js";
 import { currentHostname, isSiteEnabled } from "./host.js";
 import { findEditors, observeEditors } from "./editor.js";
-import { createAutocomplete } from "./autocomplete.js";
-import { createPanel, showToast } from "./panel.js";
+import { createAutocomplete } from "./autocomplete/index.js";
+import { showToast } from "./toast.js";
+import { applyContentTheme } from "./styles.js";
 import type { EditorTarget, Mappings, Settings, SiteOverrides } from "./types.js";
 
 const SCRIPT_NAME = "@-Mapper";
@@ -22,36 +21,16 @@ const attached = new Map<HTMLElement, EditorTarget>();
 let detachObserver: () => void = () => {};
 let active = false;
 
+function setMapping(key: string, val: string): void {
+  mappings = { ...mappings, [key]: val };
+  void saveMappings(mappings).catch(() => showToast(`${SCRIPT_NAME}: could not save`));
+}
+
 const autocomplete = createAutocomplete({
   getMappings: () => mappings,
   getSettings: () => settings,
-  addMapping: (key, val) => {
-    mappings[key] = val;
-    void saveMappings(mappings).catch(() => showToast(`${SCRIPT_NAME}: could not save`));
-  },
-  openPanel: () => panel.openPanel(),
+  addMapping: setMapping,
 });
-
-const panel = createPanel({
-  getMappings: () => mappings,
-  getSettings: () => settings,
-  updateSetting: (key, value) => {
-    (settings as unknown as Record<string, unknown>)[key] = value;
-    void saveSettings(settings).catch(() => showToast(`${SCRIPT_NAME}: could not save`));
-  },
-  addMapping: (key, val) => {
-    mappings[key] = val;
-    void saveMappings(mappings).catch(() => showToast(`${SCRIPT_NAME}: could not save`));
-  },
-  deleteMapping: (key) => {
-    delete mappings[key];
-    void saveMappings(mappings).catch(() => showToast(`${SCRIPT_NAME}: could not save`));
-  },
-});
-
-function kindOf(el: HTMLElement): EditorTarget["kind"] {
-  return el.tagName === "TEXTAREA" ? "textarea" : "contenteditable";
-}
 
 function syncEditors(): void {
   if (!active) return;
@@ -70,17 +49,12 @@ function syncEditors(): void {
       attached.set(t.el, t);
     }
   }
-
-  if (settings.fabEnabled !== false) panel.ensureFAB();
-  else panel.removeFAB();
 }
 
 function activate(): void {
   if (active) return;
   active = true;
   detachObserver = observeEditors(syncEditors);
-  window.addEventListener("scroll", autocomplete.hidePopup, true);
-  window.addEventListener("resize", autocomplete.hidePopup);
   syncEditors();
 }
 
@@ -89,15 +63,11 @@ function deactivate(): void {
   active = false;
   detachObserver();
   detachObserver = () => {};
-  window.removeEventListener("scroll", autocomplete.hidePopup, true);
-  window.removeEventListener("resize", autocomplete.hidePopup);
   for (const [el] of attached) {
     autocomplete.detach(attached.get(el)!);
   }
   attached.clear();
   autocomplete.hidePopup();
-  panel.closePanel();
-  panel.removeFAB();
 }
 
 function reevaluate(): void {
@@ -113,9 +83,14 @@ async function init(): Promise<void> {
     loadSiteOverrides(),
   ]);
 
+  applyContentTheme(settings.theme);
+
   onStorageChanged((changes) => {
     if (changes.mappings !== undefined) mappings = changes.mappings;
-    if (changes.settings !== undefined) settings = changes.settings;
+    if (changes.settings !== undefined) {
+      settings = changes.settings;
+      applyContentTheme(settings.theme);
+    }
     if (changes.siteOverrides !== undefined) overrides = changes.siteOverrides;
     reevaluate();
     syncEditors();

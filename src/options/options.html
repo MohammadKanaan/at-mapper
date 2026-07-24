@@ -10,11 +10,17 @@
   <main class="container">
     <header class="page-header">
       <h1>@-Mapper Settings</h1>
-      <p class="subtitle">Manage defaults, per-site overrides, mappings, and data.</p>
+      <p>Create shortcuts once, then use them in any text field.</p>
     </header>
 
-    <section class="card" id="general-card">
-      <h2>General</h2>
+    <nav class="tab-bar" role="tablist" aria-label="Settings sections">
+      <button type="button" class="tab active" id="tab-general" data-tab="general" role="tab" aria-controls="panel-general" aria-selected="true" tabindex="0">General</button>
+      <button type="button" class="tab" id="tab-sites" data-tab="sites" role="tab" aria-controls="panel-sites" aria-selected="false" tabindex="-1">Sites <span class="count" id="sites-count">0</span></button>
+      <button type="button" class="tab" id="tab-mappings" data-tab="mappings" role="tab" aria-controls="panel-mappings" aria-selected="false" tabindex="-1">Mappings <span class="count" id="mappings-count">0</span></button>
+      <button type="button" class="tab" id="tab-data" data-tab="data" role="tab" aria-controls="panel-data" aria-selected="false" tabindex="-1">Data</button>
+    </nav>
+
+    <section class="tab-panel active" id="panel-general" data-panel="general" role="tabpanel" aria-labelledby="tab-general">
       <div class="setting-row">
         <label class="switch-label" for="global-enabled">
           <span class="setting-title">Enabled by default</span>
@@ -26,9 +32,9 @@
         </label>
       </div>
       <div class="setting-row">
-        <div class="text-field">
+        <div class="text-field text-field-inline">
           <label for="trigger-char">Trigger character</label>
-          <input type="text" id="trigger-char" maxlength="1" inputmode="text" autocomplete="off" />
+          <input type="text" id="trigger-char" maxlength="1" inputmode="text" autocomplete="off" aria-describedby="trigger-error" />
           <span class="field-error" id="trigger-error">Enter a single non-whitespace character.</span>
         </div>
       </div>
@@ -43,20 +49,22 @@
         </label>
       </div>
       <div class="setting-row">
-        <label class="switch-label" for="fab-enabled">
-          <span class="setting-title">Show floating button</span>
-          <span class="setting-desc">Display the @ button for quick access.</span>
+        <label class="switch-label" for="theme-select">
+          <span class="setting-title">Appearance</span>
+          <span class="setting-desc">Use your system theme or choose one for the extension.</span>
         </label>
-        <label class="switch">
-          <input type="checkbox" id="fab-enabled" />
-          <span class="slider" aria-hidden="true"></span>
-        </label>
+        <div class="select-field">
+          <select id="theme-select" class="theme-select" aria-label="Appearance">
+            <option value="auto">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
       </div>
       <div class="save-status" id="save-status" aria-live="polite"></div>
     </section>
 
-    <section class="card" id="sites-card">
-      <h2>Per-site overrides</h2>
+    <section class="tab-panel" id="panel-sites" data-panel="sites" role="tabpanel" aria-labelledby="tab-sites" hidden>
       <p class="section-desc">Sites below override the default. Add a hostname (e.g. <code>github.com</code>) and choose Enabled or Disabled.</p>
       <div class="add-row">
         <div class="text-field grow">
@@ -75,8 +83,7 @@
       <div class="list" id="sites-list"></div>
     </section>
 
-    <section class="card" id="mappings-card">
-      <h2>Mappings</h2>
+    <section class="tab-panel" id="panel-mappings" data-panel="mappings" role="tabpanel" aria-labelledby="tab-mappings" hidden>
       <div class="text-field">
         <label for="mapping-search">Search mappings</label>
         <input type="text" id="mapping-search" placeholder="Filter by key or value…" autocomplete="off" />
@@ -84,7 +91,8 @@
       <div class="add-row">
         <div class="text-field grow">
           <label for="mapping-key">Key</label>
-          <input type="text" id="mapping-key" placeholder="word" autocomplete="off" />
+          <input type="text" id="mapping-key" placeholder="word" autocomplete="off" aria-describedby="mapping-key-error" />
+          <span class="field-error" id="mapping-key-error"></span>
         </div>
         <div class="arrow">→</div>
         <div class="text-field grow">
@@ -94,10 +102,10 @@
         <button type="button" class="btn btn-primary" id="add-mapping">Add</button>
       </div>
       <div class="list" id="mappings-list"></div>
+      <div class="undo-toast" id="undo-toast" aria-live="polite"></div>
     </section>
 
-    <section class="card" id="data-card">
-      <h2>Export / Import</h2>
+    <section class="tab-panel" id="panel-data" data-panel="data" role="tabpanel" aria-labelledby="tab-data" hidden>
       <div class="data-row">
         <button type="button" class="btn btn-secondary" id="export-btn">Export to file</button>
       </div>
@@ -126,7 +134,7 @@
     <footer class="page-footer">
       <span id="version">Version </span>
       <span class="sep">·</span>
-      <span>Descended from the original <a href="#" id="userscript-link">at-mapping userscript</a>.</span>
+      <span>Fast text shortcuts, wherever you write.</span>
     </footer>
   </main>
   <script type="module" src="options.js"></script>

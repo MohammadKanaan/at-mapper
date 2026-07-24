@@ -1,123 +1,151 @@
 /**
- * Generate the 4 extension icons as minimal deterministic PNGs at 16/32/48/128.
- * Drawn with the native `zlib` + a hand-rolled PNG encoder so we have zero
- * build dependencies. The icon is a solid rounded square with a white "@" glyph.
- *
- * Regenerates every `npm run build` so the extension always has icons present
- * even before the user supplies real artwork.
+ * Generate deterministic extension icons without runtime dependencies.
+ * The mark uses the same warm amber as the UI and a deliberately simple,
+ * high-contrast @ glyph that remains legible at toolbar size.
  */
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const ICONS_DIR = resolve(process.cwd(), "icons");
-mkdirSync(ICONS_DIR, { recursive: true });
-
 const SIZES = [16, 32, 48, 128];
+const AMBER = [180, 84, 20, 255];
+const AMBER_DARK = [145, 64, 13, 255];
+const CREAM = [255, 249, 242, 255];
 
-function encodePNG(width, height, rgba) {
-  const channels = 4;
-  const raw = Buffer.alloc((width * channels + 1) * height);
-  for (let y = 0; y < height; y++) {
-    raw[y * (width * channels + 1)] = 0;
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * channels;
-      raw[y * (width * channels + 1) + 1 + x * channels + 0] = rgba[i + 0];
-      raw[y * (width * channels + 1) + 1 + x * channels + 1] = rgba[i + 1];
-      raw[y * (width * channels + 1) + 1 + x * channels + 2] = rgba[i + 2];
-      raw[y * (width * channels + 1) + 1 + x * channels + 3] = rgba[i + 3];
-    }
-  }
-  const idat = deflateSync(raw);
-  return Buffer.concat([pngSignature(), chunk("IHDR", ihdr(width, height)), chunk("IDAT", idat), chunk("IEND", Buffer.alloc(0))]);
-}
+mkdirSync(ICONS_DIR, { recursive: true });
 
 function pngSignature() {
   return Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 }
 
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let value = n;
+    for (let bit = 0; bit < 8; bit++) {
+      value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+    }
+    table[n] = value >>> 0;
+  }
+  return table;
+})();
+
+function crc32(buffer) {
+  let value = 0xffffffff;
+  for (const byte of buffer) {
+    value = CRC_TABLE[(value ^ byte) & 0xff] ^ (value >>> 8);
+  }
+  return (value ^ 0xffffffff) >>> 0;
+}
+
 function chunk(type, data) {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length, 0);
-  const typeBuf = Buffer.from(type, "ascii");
-  const crc = crc32(Buffer.concat([typeBuf, data]));
-  const crcBuf = Buffer.alloc(4);
-  crcBuf.writeUInt32BE(crc >>> 0, 0);
-  return Buffer.concat([len, typeBuf, data, crcBuf]);
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length, 0);
+  const typeBuffer = Buffer.from(type, "ascii");
+  const checksum = Buffer.alloc(4);
+  checksum.writeUInt32BE(crc32(Buffer.concat([typeBuffer, data])), 0);
+  return Buffer.concat([length, typeBuffer, data, checksum]);
 }
 
 function ihdr(width, height) {
-  const b = Buffer.alloc(13);
-  b.writeUInt32BE(width, 0);
-  b.writeUInt32BE(height, 4);
-  b[8] = 8;
-  b[9] = 6;
-  b[10] = 0;
-  b[11] = 0;
-  b[12] = 0;
-  return b;
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8;
+  header[9] = 6;
+  return header;
 }
 
-const CRC_TABLE = (() => {
-  const t = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    t[n] = c >>> 0;
+function encodePNG(width, height, rgba) {
+  const rowLength = width * 4 + 1;
+  const raw = Buffer.alloc(rowLength * height);
+  for (let y = 0; y < height; y++) {
+    raw[y * rowLength] = 0;
+    rgba.copy(raw, y * rowLength + 1, y * width * 4, (y + 1) * width * 4);
   }
-  return t;
-})();
+  return Buffer.concat([
+    pngSignature(),
+    chunk("IHDR", ihdr(width, height)),
+    chunk("IDAT", deflateSync(raw)),
+    chunk("IEND", Buffer.alloc(0)),
+  ]);
+}
 
-function crc32(buf) {
-  let c = 0xffffffff;
-  for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
+function mix(base, overlay, amount) {
+  return [
+    Math.round(base[0] * (1 - amount) + overlay[0] * amount),
+    Math.round(base[1] * (1 - amount) + overlay[1] * amount),
+    Math.round(base[2] * (1 - amount) + overlay[2] * amount),
+    255,
+  ];
+}
+
+function insideRoundedSquare(x, y, size) {
+  const inset = size * 0.04;
+  const radius = size * 0.22;
+  const left = inset;
+  const top = inset;
+  const right = size - inset;
+  const bottom = size - inset;
+  const nearestX = Math.max(left + radius, Math.min(x, right - radius));
+  const nearestY = Math.max(top + radius, Math.min(y, bottom - radius));
+  return Math.hypot(x - nearestX, y - nearestY) <= radius;
+}
+
+function insideGlyph(x, y, size) {
+  const nx = (x - size / 2) / size;
+  const ny = (y - size / 2) / size;
+
+  const outerDistance = Math.hypot(nx, ny * 1.04);
+  const outerAngle = Math.atan2(ny, nx);
+  const outerRing =
+    outerDistance >= 0.315 &&
+    outerDistance <= 0.405 &&
+    !(outerAngle > 0.28 && outerAngle < 1.08);
+
+  const innerX = nx + 0.045;
+  const innerY = ny + 0.005;
+  const innerDistance = Math.hypot(innerX, innerY * 1.06);
+  const innerBowl = innerDistance >= 0.105 && innerDistance <= 0.185;
+  const innerStem = nx >= 0.09 && nx <= 0.17 && ny >= -0.18 && ny <= 0.16;
+  const tail = nx >= 0.13 && nx <= 0.35 && ny >= 0.08 && ny <= 0.17;
+
+  return outerRing || innerBowl || innerStem || tail;
+}
+
+function coverage(x, y, size, sampler) {
+  let hits = 0;
+  const samples = 4;
+  for (let sampleY = 0; sampleY < samples; sampleY++) {
+    for (let sampleX = 0; sampleX < samples; sampleX++) {
+      if (sampler(x + (sampleX + 0.5) / samples, y + (sampleY + 0.5) / samples, size)) {
+        hits++;
+      }
+    }
+  }
+  return hits / (samples * samples);
 }
 
 function makeIcon(size) {
   const rgba = Buffer.alloc(size * size * 4);
-  const bg = [37, 99, 235, 255];
-  const fg = [255, 255, 255, 255];
-  const r = size / 2;
-  const corner = size * 0.22;
-  const stroke = Math.max(1, Math.round(size * 0.12));
-  const innerR = size * 0.26;
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      const i = (y * size + x) * 4;
-      const dx = Math.abs(x - r + 0.5);
-      const dy = Math.abs(y - r + 0.5);
-      const inCorner = dx > r - corner && dy > r - corner;
-      const inBox = dx <= r - 1 && dy <= r - 1;
-      const inRound = dx <= r - 1 && dy <= r - 1 && (dx <= r - corner || dy <= r - corner);
-      let isBg = inRound;
-      let isFg = false;
-      if (inBox) {
-        const cx = x - r + 0.5;
-        const cy = y - r + 0.5;
-        const distOuter = Math.hypot(cx, cy);
-        const distInner = Math.hypot(cx, cy);
-        const onRing = distOuter <= innerR + stroke / 2 && distOuter >= innerR - stroke / 2;
-        let onTail = false;
-        if (cx >= 0) onTail = cx <= stroke / 2 + 0.5 && cy >= -innerR - stroke / 2 && cy <= innerR + stroke / 2 && Math.abs(cy) <= stroke / 2 + 0.5 ? Math.abs(cy) <= stroke / 2 + 0.5 : false;
-        if (onRing) isFg = true;
-        if (onTail) isFg = true;
-        const dotR = stroke / 2 + 0.5;
-        if (Math.hypot(cx, cy) <= dotR) isFg = true;
-      }
-      if (isFg) {
-        rgba[i] = fg[0]; rgba[i + 1] = fg[1]; rgba[i + 2] = fg[2]; rgba[i + 3] = fg[3];
-      } else if (isBg) {
-        rgba[i] = bg[0]; rgba[i + 1] = bg[1]; rgba[i + 2] = bg[2]; rgba[i + 3] = bg[3];
-      } else {
-        rgba[i] = 0; rgba[i + 1] = 0; rgba[i + 2] = 0; rgba[i + 3] = 0;
-      }
+      const index = (y * size + x) * 4;
+      const tileCoverage = coverage(x, y, size, insideRoundedSquare);
+      const glyphCoverage = coverage(x, y, size, insideGlyph);
+      const base = y > size * 0.72 ? mix(AMBER, AMBER_DARK, 0.12) : AMBER;
+      const color = mix(base, CREAM, glyphCoverage);
+      rgba[index] = color[0];
+      rgba[index + 1] = color[1];
+      rgba[index + 2] = color[2];
+      rgba[index + 3] = Math.round(255 * tileCoverage);
     }
   }
   return encodePNG(size, size, rgba);
 }
 
-for (const s of SIZES) {
-  writeFileSync(resolve(ICONS_DIR, `icon-${s}.png`), makeIcon(s));
-  console.log(`icons/icon-${s}.png generated`);
+for (const size of SIZES) {
+  writeFileSync(resolve(ICONS_DIR, `icon-${size}.png`), makeIcon(size));
+  console.log(`icons/icon-${size}.png generated`);
 }

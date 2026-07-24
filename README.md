@@ -33,12 +33,12 @@ manifest + HTML/CSS into `dist/`. The `dist/` folder is the loadable extension.
 
 ## Usage
 
-- Type `@word` in any textarea or contenteditable editor → a dropdown of
+- Type `@word` in a text input, textarea, or contenteditable editor → a dropdown of
   matching mappings appears. Arrow keys navigate, Enter/Tab applies, Escape closes.
-- The floating **@** button (bottom-right) opens a side panel to add/view/delete mappings.
-- The toolbar popup lets you toggle the extension for the current site in one click.
-- The options page (full tab) manages global defaults, trigger character,
-  case-sensitivity, per-site list, and export/import of mappings.
+- The toolbar popup lets you add, search, edit, and remove mappings, toggle the
+  current site, switch appearance, and quickly import or export your data.
+- The settings page manages global defaults, appearance, the trigger character,
+  case sensitivity, per-site overrides, and full merge/replace imports.
 
 ## Export / Import
 
@@ -48,7 +48,7 @@ Export produces a JSON payload:
 {
   "version": 1,
   "mappings": { "key": "replacement", "...": "..." },
-  "settings": { "trigger": "@", "caseSensitive": false, "fabEnabled": true, "globalEnabledByDefault": true },
+  "settings": { "trigger": "@", "caseSensitive": false, "globalEnabledByDefault": true, "theme": "auto" },
   "siteOverrides": { "example.com": false }
 }
 ```
