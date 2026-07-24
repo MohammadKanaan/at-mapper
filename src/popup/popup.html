@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@-Mapper</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup" id="popup">
+      <header class="header">
+        <span class="title">@-Mapper</span>
+        <span class="host-badge" id="hostBadge"></span>
+      </header>
+
+      <section class="site-section">
+        <label class="toggle" id="siteToggle" for="siteToggleInput">
+          <span class="toggle__switch">
+            <input id="siteToggleInput" type="checkbox" />
+            <span class="toggle__slider"></span>
+          </span>
+          <span class="toggle__label" id="siteToggleLabel"></span>
+        </label>
+        <div class="site-status" id="siteStatus"></div>
+      </section>
+
+      <section class="search-section">
+        <input
+          id="searchInput"
+          class="search"
+          type="text"
+          placeholder="Search mappings…"
+          autocomplete="off"
+        />
+      </section>
+
+      <section class="list-section">
+        <ul class="mappings" id="mappingsList"></ul>
+        <div class="empty" id="emptyState">No mappings match your search.</div>
+      </section>
+
+      <hr class="divider" />
+
+      <section class="actions">
+        <button class="btn btn--primary" id="exportBtn" type="button">Export</button>
+        <button class="btn" id="importBtn" type="button">Import</button>
+        <input id="importFile" class="sr-only" type="file" accept="application/json" />
+        <button class="btn btn--ghost" id="optionsBtn" type="button">Open options</button>
+      </section>
+
+      <footer class="footer">
+        <button class="link" id="footerOptions" type="button">Manage all settings →</button>
+      </footer>
+
+      <div class="status" id="statusMsg" aria-live="polite"></div>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "at-mapper-extension",
+  "version": "1.0.0",
+  "description": "Cross-browser @-mapping autocomplete for any editable field. Per-site enable/disable, export/import mappings.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "make-icons": "node scripts/make-icons.mjs",
+    "copy-static": "node scripts/copy-static.mjs",
+    "build": "npm run clean && npm run make-icons && tsc && npm run copy-static",
+    "build:firefox": "TARGET=firefox npm run build",
+    "typecheck": "tsc --noEmit",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "@types/firefox-webext-browser": "^120.0.4",
+    "typescript": "^5.6.3"
+  }
+}

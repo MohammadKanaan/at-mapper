@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>@-Mapper Settings</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="page-header">
+      <h1>@-Mapper Settings</h1>
+      <p class="subtitle">Manage defaults, per-site overrides, mappings, and data.</p>
+    </header>
+
+    <section class="card" id="general-card">
+      <h2>General</h2>
+      <div class="setting-row">
+        <label class="switch-label" for="global-enabled">
+          <span class="setting-title">Enabled by default</span>
+          <span class="setting-desc">Activate on all sites except those explicitly disabled.</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" id="global-enabled" />
+          <span class="slider" aria-hidden="true"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <div class="text-field">
+          <label for="trigger-char">Trigger character</label>
+          <input type="text" id="trigger-char" maxlength="1" inputmode="text" autocomplete="off" />
+          <span class="field-error" id="trigger-error">Enter a single non-whitespace character.</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <label class="switch-label" for="case-sensitive">
+          <span class="setting-title">Case-sensitive matching</span>
+          <span class="setting-desc">Match mapping keys exactly by case.</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" id="case-sensitive" />
+          <span class="slider" aria-hidden="true"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <label class="switch-label" for="fab-enabled">
+          <span class="setting-title">Show floating button</span>
+          <span class="setting-desc">Display the @ button for quick access.</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" id="fab-enabled" />
+          <span class="slider" aria-hidden="true"></span>
+        </label>
+      </div>
+      <div class="save-status" id="save-status" aria-live="polite"></div>
+    </section>
+
+    <section class="card" id="sites-card">
+      <h2>Per-site overrides</h2>
+      <p class="section-desc">Sites below override the default. Add a hostname (e.g. <code>github.com</code>) and choose Enabled or Disabled.</p>
+      <div class="add-row">
+        <div class="text-field grow">
+          <label for="site-input">Hostname</label>
+          <input type="text" id="site-input" placeholder="example.com" autocomplete="off" />
+        </div>
+        <div class="select-field">
+          <label for="site-state">State</label>
+          <select id="site-state">
+            <option value="enabled">Enabled</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary" id="add-site">Add</button>
+      </div>
+      <div class="list" id="sites-list"></div>
+    </section>
+
+    <section class="card" id="mappings-card">
+      <h2>Mappings</h2>
+      <div class="text-field">
+        <label for="mapping-search">Search mappings</label>
+        <input type="text" id="mapping-search" placeholder="Filter by key or value…" autocomplete="off" />
+      </div>
+      <div class="add-row">
+        <div class="text-field grow">
+          <label for="mapping-key">Key</label>
+          <input type="text" id="mapping-key" placeholder="word" autocomplete="off" />
+        </div>
+        <div class="arrow">→</div>
+        <div class="text-field grow">
+          <label for="mapping-val">Replacement</label>
+          <input type="text" id="mapping-val" placeholder="replacement" autocomplete="off" />
+        </div>
+        <button type="button" class="btn btn-primary" id="add-mapping">Add</button>
+      </div>
+      <div class="list" id="mappings-list"></div>
+    </section>
+
+    <section class="card" id="data-card">
+      <h2>Export / Import</h2>
+      <div class="data-row">
+        <button type="button" class="btn btn-secondary" id="export-btn">Export to file</button>
+      </div>
+      <div class="import-box">
+        <div class="file-row">
+          <label class="file-input" for="import-file">
+            <input type="file" id="import-file" accept=".json,application/json" />
+            <span class="file-name" id="import-file-name">Choose file</span>
+          </label>
+          <div class="radio-group" id="import-mode">
+            <label class="radio">
+              <input type="radio" name="import-mode" value="merge" checked />
+              <span>Merge</span>
+            </label>
+            <label class="radio">
+              <input type="radio" name="import-mode" value="replace" />
+              <span>Replace</span>
+            </label>
+          </div>
+          <button type="button" class="btn btn-primary" id="import-btn">Import</button>
+        </div>
+        <div class="import-result" id="import-result" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <span id="version">Version </span>
+      <span class="sep">·</span>
+      <span>Descended from the original <a href="#" id="userscript-link">at-mapping userscript</a>.</span>
+    </footer>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
