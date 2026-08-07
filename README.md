@@ -4,8 +4,6 @@ Cross-browser (Chrome + Firefox) WebExtension that converts `@word` into a
 configured replacement via an autocomplete dropdown — on **any** website with
 an editable field. Manage mappings, toggle per-site, and export/import.
 
-Converted from the original `at-mapping.user.js` (Memos-only userscript).
-
 ## Build
 
 Requires Node 18+.
@@ -27,9 +25,11 @@ manifest + HTML/CSS into `dist/`. The `dist/` folder is the loadable extension.
 4. Select the `dist/` folder
 
 ### Firefox
-1. Visit `about:debugging#/runtime/this-firefox`
-2. Click **Load Temporary Add-on…**
-3. Select `dist/manifest.json`
+1. Build the Firefox variant: `npm run build:firefox`. This generates a
+   `background.scripts` entry, which Firefox requires while service workers are disabled.
+2. Visit `about:debugging#/runtime/this-firefox`
+3. Click **Load Temporary Add-on…**
+4. Select `dist/manifest.json`
 
 ## Usage
 
