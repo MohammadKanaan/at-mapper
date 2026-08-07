@@ -1,62 +1,89 @@
-# @-Mapper Extension
+# @-Mapper
 
-Cross-browser (Chrome + Firefox) WebExtension that converts `@word` into a
-configured replacement via an autocomplete dropdown — on **any** website with
-an editable field. Manage mappings, toggle per-site, and export/import.
+@-Mapper is a cross-browser WebExtension that expands shortcuts such as `@word` into saved text from an autocomplete menu. It supports text inputs, textareas, and contenteditable editors on regular web pages.
 
-## Build
+## Features
 
-Requires Node 18+.
+- Configurable trigger character and case-sensitive matching
+- Keyboard navigation, inline mapping creation, and replacement
+- Mapping management, import, and export
+- Global enabled setting with per-hostname overrides
+- Light, dark, and system appearance modes
+
+## Requirements
+
+- Node.js 18 or later
+- A Chromium-based browser (Chrome, Edge, Brave, etc.) or Firefox 121+
+
+## Install and build
+
+Install dependencies, then build the default Chromium package:
 
 ```bash
-npm install
+npm ci
 npm run build
 ```
 
-This compiles `src/**/*.ts` → `dist/` via `tsc`, generates icons, and copies the
-manifest + HTML/CSS into `dist/`. The `dist/` folder is the loadable extension.
+The loadable extension is generated in `dist/`.
 
-## Load unpacked
+For local development:
 
-### Chrome / Edge / Brave (Chromium)
-1. Visit `chrome://extensions`
-2. Enable **Developer mode** (top right)
-3. Click **Load unpacked**
-4. Select the `dist/` folder
+```bash
+npm run watch      # Recompile TypeScript on changes
+npm run typecheck  # Check types without writing dist/
+npm test           # Build, then run the Node test suite
+```
+
+Run `npm run build` after changing static assets or the manifest.
+
+## Load the extension
+
+### Chrome, Edge, Brave, and other Chromium browsers
+
+1. Open `chrome://extensions` (or your browser's extensions page).
+2. Turn on **Developer mode**.
+3. Choose **Load unpacked**.
+4. Select this project's `dist/` directory.
 
 ### Firefox
-1. Build the Firefox variant: `npm run build:firefox`. This generates a
-   `background.scripts` entry, which Firefox requires while service workers are disabled.
-2. Visit `about:debugging#/runtime/this-firefox`
-3. Click **Load Temporary Add-on…**
-4. Select `dist/manifest.json`
 
-## Usage
+Build the Firefox-compatible package first:
 
-- Type `@word` in a text input, textarea, or contenteditable editor → a dropdown of
-  matching mappings appears. Arrow keys navigate, Enter/Tab applies, Escape closes.
-- The toolbar popup lets you add, search, edit, and remove mappings, toggle the
-  current site, switch appearance, and quickly import or export your data.
-- The settings page manages global defaults, appearance, the trigger character,
-  case sensitivity, per-site overrides, and full merge/replace imports.
+```bash
+npm run build:firefox
+```
 
-## Export / Import
+Then:
 
-Export produces a JSON payload:
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Select **Load Temporary Add-on…**.
+3. Choose `dist/manifest.json`.
+
+Temporary add-ons are removed when Firefox restarts.
+
+## Export and import
+
+Exports are JSON files with mappings, settings, and hostname overrides:
 
 ```json
 {
   "version": 1,
-  "mappings": { "key": "replacement", "...": "..." },
-  "settings": { "trigger": "@", "caseSensitive": false, "globalEnabledByDefault": true, "theme": "auto" },
+  "mappings": { "word": "replacement word", "...": "..." },
+  "settings": {
+    "trigger": "@",
+    "caseSensitive": false,
+    "globalEnabledByDefault": true,
+    "theme": "auto"
+  },
   "siteOverrides": { "example.com": false }
 }
 ```
 
-Import offers two modes: **Merge** (add/overwrite keys into existing data) and
-**Replace** (wipe and replace everything).
+Import supports **Merge** (add or overwrite matching keys) and **Replace**
+(replace all stored data).
 
-## Storage
+## Storage and permissions
 
-- `chrome.storage.local` → mappings (up to ~10 MB)
-- `chrome.storage.sync`  → settings + per-site overrides (roams across devices)
+- Mappings are saved in the browser's local WebExtension storage.
+- Settings and hostname overrides are saved in synchronized WebExtension storage, when the browser supports sync.
+- The extension requests access to all URLs so autocomplete can run in editable fields across websites; it can be disabled globally or per site.
