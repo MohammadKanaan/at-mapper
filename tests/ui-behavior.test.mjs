@@ -5,6 +5,32 @@ import { readFile } from "node:fs/promises";
 
 import * as mappings from "../dist/shared/mappings.js";
 import * as popup from "../dist/autocomplete/popup.js";
+import { activateAddForm } from "../dist/autocomplete/add-form.js";
+
+class FakeElement {
+  constructor() {
+    this.classList = {
+      add() {},
+      remove() {},
+    };
+    this.dataset = {};
+    this.listeners = new Map();
+    this.parentNode = null;
+    this.textContent = "";
+  }
+
+  setAttribute() {}
+  removeAttribute() {}
+  appendChild(child) {
+    child.parentNode = this;
+    this.child = child;
+    return child;
+  }
+  focus() {}
+  addEventListener(type, listener) {
+    this.listeners.set(type, listener);
+  }
+}
 
 test("mapping empty-state copy distinguishes an empty library from an empty search", () => {
   assert.equal(
@@ -31,6 +57,65 @@ test("new mapping validation rejects missing values and duplicate shortcuts", ()
     mappings.getNewMappingError(current, "summary", "Summary text", "@"),
     null,
   );
+});
+
+test("Firefox loading instructions use the Firefox-specific build", async () => {
+  const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
+
+  assert.match(readme, /### Firefox[\s\S]*?npm run build:firefox/);
+});
+
+test("adding a mapping from autocomplete immediately replaces the active token", () => {
+  const originalDocument = globalThis.document;
+  globalThis.document = {
+    createElement: () => new FakeElement(),
+  };
+
+  try {
+    const editor = new FakeElement();
+    const addRow = new FakeElement();
+    const state = {
+      popup: { contains: () => true },
+      active: { target: { el: editor, kind: "input" }, token: { trigger: "@", word: "sig", start: 0, end: 4 } },
+      selectedIdx: 0,
+      composing: false,
+      blurTimer: null,
+      items: [],
+      attached: new Map(),
+    };
+    const added = [];
+    let replacement = null;
+    const hidePopup = () => {
+      state.active = null;
+    };
+    const applyMapping = (_key, value) => {
+      if (state.active) replacement = value;
+      hidePopup();
+    };
+
+    activateAddForm(
+      state,
+      "sig",
+      addRow,
+      "@",
+      (key, value) => added.push([key, value]),
+      applyMapping,
+      hidePopup,
+      () => {},
+    );
+
+    addRow.child.value = "Best regards";
+    addRow.child.listeners.get("keydown")({
+      key: "Enter",
+      preventDefault() {},
+      stopPropagation() {},
+    });
+
+    assert.deepEqual(added, [["sig", "Best regards"]]);
+    assert.equal(replacement, "Best regards");
+  } finally {
+    globalThis.document = originalDocument;
+  }
 });
 
 test("autocomplete popup stays inside narrow viewports", () => {

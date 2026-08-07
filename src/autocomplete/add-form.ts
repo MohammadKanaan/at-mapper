@@ -42,8 +42,8 @@ export function activateAddForm(
       const v = input.value.trim();
       if (!v) return;
       addMapping(word, v);
-      hidePopup();
       applyMapping(word, v);
+      hidePopup();
     } else if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
