@@ -4,13 +4,13 @@ export const STYLE_ID = "atm-styles";
 export const THEME_STYLE_ID = "atm-styles-theme";
 
 export const CSS_VARS = {
-  bg: "var(--atm-background, #fffaf4)",
-  surface: "var(--atm-surface, #fffdf9)",
-  fg: "var(--atm-foreground, #2b2520)",
-  muted: "var(--atm-muted, #6d6257)",
-  border: "var(--atm-border, #ddd1c3)",
-  accent: "var(--atm-accent, #b45414)",
-  accentSoft: "var(--atm-accent-soft, #f8e5d5)",
+  bg: "var(--ui-color-surface)",
+  surface: "var(--ui-color-surface-raised)",
+  fg: "var(--ui-color-text)",
+  muted: "var(--ui-color-text-muted)",
+  border: "var(--ui-color-border)",
+  accent: "var(--ui-color-accent)",
+  accentSoft: "var(--ui-color-accent-soft)",
 };
 
 export const Z = { popup: 99999, toast: 99996 };
@@ -21,19 +21,19 @@ export const POPUP_ID = "atm-popup";
 
 const DARK_CSS = `
   .atm-popup {
-    --atm-background: #28231f;
-    --atm-surface: #302a25;
-    --atm-foreground: #f3ebe2;
-    --atm-muted: #b8aa9c;
-    --atm-border: #4b423a;
-    --atm-accent: #ee9c55;
-    --atm-accent-soft: #4a3020;
+    --ui-color-surface: #28231f;
+    --ui-color-surface-raised: #302a25;
+    --ui-color-text: #f3ebe2;
+    --ui-color-text-muted: #b8aa9c;
+    --ui-color-border: #4b423a;
+    --ui-color-accent: #ee9c55;
+    --ui-color-accent-soft: #4a3020;
     box-shadow: 0 16px 42px rgba(0, 0, 0, 0.38);
   }
   .atm-toast {
-    --atm-background: #302a25;
-    --atm-foreground: #f3ebe2;
-    --atm-border: #65584d;
+    --ui-color-surface: #302a25;
+    --ui-color-text: #f3ebe2;
+    --ui-color-border: #65584d;
   }
 `;
 
@@ -43,6 +43,13 @@ export function injectStyles(): void {
   style.id = STYLE_ID;
   style.textContent = `
     .atm-popup {
+      --ui-color-surface: var(--atm-background, #fffaf4);
+      --ui-color-surface-raised: var(--atm-surface, #fffdf9);
+      --ui-color-text: var(--atm-foreground, #2b2520);
+      --ui-color-text-muted: var(--atm-muted, #6d6257);
+      --ui-color-border: var(--atm-border, #ddd1c3);
+      --ui-color-accent: var(--atm-accent, #b45414);
+      --ui-color-accent-soft: var(--atm-accent-soft, #f8e5d5);
       position: fixed;
       z-index: ${Z.popup};
       box-sizing: border-box;
@@ -144,15 +151,18 @@ export function injectStyles(): void {
     }
 
     .atm-toast {
+      --ui-color-surface: var(--atm-background, #2b2520);
+      --ui-color-text: var(--atm-foreground, #fffaf4);
+      --ui-color-border: var(--atm-border, #4b423a);
       position: fixed;
       right: 16px;
       bottom: 16px;
       z-index: ${Z.toast};
       max-width: min(360px, calc(100vw - 32px));
       padding: 10px 14px;
-      color: var(--atm-foreground, #fffaf4);
-      background: var(--atm-background, #2b2520);
-      border: 1px solid var(--atm-border, #4b423a);
+      color: var(--ui-color-text);
+      background: var(--ui-color-surface);
+      border: 1px solid var(--ui-color-border);
       border-radius: 10px;
       box-shadow: 0 12px 32px rgba(43, 37, 32, 0.24);
       opacity: 0;

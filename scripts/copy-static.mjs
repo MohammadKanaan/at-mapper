@@ -29,5 +29,6 @@ cpSync(resolve(root, "src", "popup", "popup.html"), resolve(dist, "popup", "popu
 cpSync(resolve(root, "src", "popup", "popup.css"), resolve(dist, "popup", "popup.css"), { force: true });
 cpSync(resolve(root, "src", "options", "options.html"), resolve(dist, "options", "options.html"), { force: true });
 cpSync(resolve(root, "src", "options", "options.css"), resolve(dist, "options", "options.css"), { force: true });
+cpSync(resolve(root, "src", "ui", "styles"), resolve(dist, "ui", "styles"), { recursive: true, force: true });
 
 console.log(`static assets copied to dist/ (target: ${process.env.TARGET ?? "chrome"})`);

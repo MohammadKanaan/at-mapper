@@ -76,7 +76,7 @@ export function createEditFields(opts: EditFieldOptions): EditFields {
 
   function validate(): boolean {
     const ok = validateMappingKey(keyInput.value, opts.key, opts.mappings);
-    keyInput.classList.toggle("invalid", !ok);
+    keyInput.setAttribute("aria-invalid", String(!ok));
     return ok;
   }
 

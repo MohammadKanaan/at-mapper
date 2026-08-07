@@ -12,14 +12,14 @@
         <h1 class="title">@-Mapper</h1>
         <div class="header-actions">
           <span class="host-badge" id="hostBadge"></span>
-          <button class="theme-toggle" id="themeToggle" type="button" title="Change theme" aria-label="Change theme">System</button>
+          <button class="ui-button ui-button--ghost ui-button--compact theme-toggle" id="themeToggle" type="button" title="Change theme" aria-label="Change theme">System</button>
         </div>
       </header>
 
       <section class="site-section" id="siteSection">
-        <label class="switch" for="siteToggleInput">
+        <label class="ui-switch ui-switch--compact" for="siteToggleInput">
           <input id="siteToggleInput" type="checkbox" aria-labelledby="siteToggleLabel" aria-describedby="siteStatus" />
-          <span class="slider" aria-hidden="true"></span>
+          <span class="ui-switch__track" aria-hidden="true"></span>
         </label>
         <div class="site-info">
           <span class="site-info__label" id="siteToggleLabel"></span>
@@ -29,25 +29,25 @@
 
       <section class="add-section">
         <div class="field-row add-row">
-          <div class="text-field grow">
-            <label class="sr-only" for="newKey">Shortcut</label>
-            <input id="newKey" type="text" placeholder="@word" autocomplete="off" />
+          <div class="ui-field grow">
+            <label class="ui-visually-hidden" for="newKey">Shortcut</label>
+            <input class="ui-input ui-input--compact" id="newKey" type="text" placeholder="@word" autocomplete="off" />
           </div>
           <span class="arrow" aria-hidden="true">→</span>
-          <div class="text-field grow">
-            <label class="sr-only" for="newVal">Replacement text</label>
-            <input id="newVal" type="text" placeholder="replacement" autocomplete="off" />
+          <div class="ui-field grow">
+            <label class="ui-visually-hidden" for="newVal">Replacement text</label>
+            <input class="ui-input ui-input--compact" id="newVal" type="text" placeholder="replacement" autocomplete="off" />
           </div>
-          <button class="btn btn-primary" id="addBtn" type="button">Add</button>
+          <button class="ui-button ui-button--primary ui-button--compact" id="addBtn" type="button">Add</button>
         </div>
       </section>
 
       <section class="search-section">
         <div class="search-wrap">
-          <label class="sr-only" for="searchInput">Search mappings</label>
+          <label class="ui-visually-hidden" for="searchInput">Search mappings</label>
           <input
             id="searchInput"
-            class="search"
+            class="ui-input ui-input--compact search"
             type="text"
             placeholder="Search mappings…"
             autocomplete="off"
@@ -57,22 +57,22 @@
       </section>
 
       <section class="list-section">
-        <ul class="mappings" id="mappingsList"></ul>
-        <div class="empty" id="emptyState"></div>
+        <ul class="ui-list mappings" id="mappingsList"></ul>
+        <div class="ui-empty-state ui-empty-state--compact empty" id="emptyState"></div>
       </section>
 
       <section class="actions">
-        <button class="btn btn-secondary" id="exportBtn" type="button">Export</button>
-        <button class="btn btn-secondary" id="importBtn" type="button">Import</button>
-        <input id="importFile" class="sr-only" type="file" accept="application/json" />
-        <button class="btn btn-ghost" id="optionsBtn" type="button">Settings</button>
+        <button class="ui-button ui-button--secondary ui-button--compact" id="exportBtn" type="button">Export</button>
+        <button class="ui-button ui-button--secondary ui-button--compact" id="importBtn" type="button">Import</button>
+        <input id="importFile" class="ui-visually-hidden" type="file" accept="application/json" />
+        <button class="ui-button ui-button--ghost ui-button--compact" id="optionsBtn" type="button">Settings</button>
       </section>
 
-      <div class="status" id="statusMsg" aria-live="polite"></div>
+      <div class="ui-notice status" id="statusMsg" aria-live="polite"></div>
 
-      <div class="toast" id="undoToast" aria-live="polite">
+      <div class="ui-toast toast" id="undoToast" aria-live="polite">
         <span class="toast__text" id="undoText"></span>
-        <button class="toast__btn" id="undoBtn" type="button">Undo</button>
+        <button class="ui-toast__action" id="undoBtn" type="button">Undo</button>
       </div>
     </div>
 

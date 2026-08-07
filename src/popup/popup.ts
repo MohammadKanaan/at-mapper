@@ -21,6 +21,7 @@ import {
   getNewMappingError,
 } from "../shared/mappings.js";
 import { makeUndoToast, type UndoToast } from "../shared/undo-toast.js";
+import { createUiButton } from "../ui/index.js";
 
 const hostBadge = document.getElementById("hostBadge") as HTMLSpanElement;
 const siteToggleInput = document.getElementById("siteToggleInput") as HTMLInputElement;
@@ -52,28 +53,6 @@ let lastDeleted: { key: string; value: string } | null = null;
 let editingKey: string | null = null;
 let systemDarkQuery: MediaQueryList | null = null;
 let undoToastCtrl: UndoToast | null = null;
-
-type IconName = "edit" | "delete" | "save" | "cancel";
-
-const ICON_PATHS: Record<IconName, string> = {
-  edit: "M4 15.5V20h4.5L18.8 9.7l-4.5-4.5L4 15.5Zm17.7-9.8a1 1 0 0 0 0-1.4l-2-2a1 1 0 0 0-1.4 0l-2.4 2.4 4.5 4.5 2.3-2.5Z",
-  delete: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12Zm3-9h2v8H9v-8Zm4 0h2v8h-2v-8Zm2.5-6-1-1h-5l-1 1H5v2h14V4h-3.5Z",
-  save: "m9.2 16.2-4.4-4.4-1.4 1.4L9.2 19 21 7.2l-1.4-1.4L9.2 16.2Z",
-  cancel: "m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5Z",
-};
-
-function setIconButton(button: HTMLButtonElement, icon: IconName, label: string): void {
-  button.replaceChildren();
-  button.title = label;
-  button.setAttribute("aria-label", label);
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("aria-hidden", "true");
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("d", ICON_PATHS[icon]);
-  svg.appendChild(path);
-  button.appendChild(svg);
-}
 
 function applyThemeToDoc(theme: Theme): void {
   const resolved = applyTheme(document, theme, systemDarkQuery);
@@ -160,11 +139,11 @@ function updateCount(filtered: number, total: number): void {
 
 function createDisplayRow(key: string, value: string): HTMLLIElement {
   const li = document.createElement("li");
-  li.className = "mapping";
+  li.className = "ui-list-row ui-list-row--compact mapping";
   li.dataset.key = key;
 
   const main = document.createElement("div");
-  main.className = "mapping__main";
+  main.className = "ui-list-row__main mapping__main";
 
   const keySpan = document.createElement("span");
   keySpan.className = "mapping__key";
@@ -183,18 +162,25 @@ function createDisplayRow(key: string, value: string): HTMLLIElement {
   main.append(keySpan, sep, valSpan);
 
   const actions = document.createElement("div");
-  actions.className = "mapping__actions";
+  actions.className = "ui-list-row__actions mapping__actions";
 
-  const editBtn = document.createElement("button");
-  editBtn.type = "button";
-  editBtn.className = "btn btn-icon btn-edit";
-  setIconButton(editBtn, "edit", `Edit @${key}`);
+  const editBtn = createUiButton({
+    label: `Edit @${key}`,
+    variant: "icon",
+    density: "compact",
+    icon: "edit",
+    title: `Edit @${key}`,
+  });
   editBtn.addEventListener("click", () => startEdit(key));
 
-  const deleteBtn = document.createElement("button");
-  deleteBtn.type = "button";
-  deleteBtn.className = "btn btn-icon btn-delete";
-  setIconButton(deleteBtn, "delete", `Delete @${key}`);
+  const deleteBtn = createUiButton({
+    label: `Delete @${key}`,
+    variant: "icon",
+    density: "compact",
+    icon: "delete",
+    title: `Delete @${key}`,
+    className: "ui-button--icon-danger",
+  });
   deleteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     void deleteMapping(key);
@@ -207,14 +193,15 @@ function createDisplayRow(key: string, value: string): HTMLLIElement {
 
 function createEditRow(key: string, value: string): HTMLLIElement {
   const li = document.createElement("li");
-  li.className = "mapping mapping--editing";
+  li.className = "ui-list-row ui-list-row--compact mapping mapping--editing";
   li.dataset.key = key;
+  li.dataset.editing = "true";
 
   const row = document.createElement("div");
   row.className = "edit-row";
 
   const keyField = document.createElement("div");
-  keyField.className = "text-field";
+  keyField.className = "ui-field";
 
   const arrow = document.createElement("span");
   arrow.className = "arrow";
@@ -222,7 +209,7 @@ function createEditRow(key: string, value: string): HTMLLIElement {
   arrow.setAttribute("aria-hidden", "true");
 
   const valField = document.createElement("div");
-  valField.className = "text-field";
+  valField.className = "ui-field";
 
   const fields = createEditFields({
     key,
@@ -240,21 +227,30 @@ function createEditRow(key: string, value: string): HTMLLIElement {
   });
   fields.keyInput.setAttribute("aria-label", "Shortcut");
   fields.valInput.setAttribute("aria-label", "Replacement text");
+  fields.keyInput.className = "ui-input ui-input--compact";
+  fields.valInput.className = "ui-input ui-input--compact";
   keyField.appendChild(fields.keyInput);
   valField.appendChild(fields.valInput);
 
   const actions = document.createElement("div");
-  actions.className = "mapping__actions";
+  actions.className = "ui-list-row__actions mapping__actions";
 
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "button";
-  saveBtn.className = "btn btn-icon btn-save";
-  setIconButton(saveBtn, "save", `Save @${key}`);
+  const saveBtn = createUiButton({
+    label: `Save @${key}`,
+    variant: "icon",
+    density: "compact",
+    icon: "save",
+    title: `Save @${key}`,
+  });
 
-  const cancelBtn = document.createElement("button");
-  cancelBtn.type = "button";
-  cancelBtn.className = "btn btn-icon btn-delete";
-  setIconButton(cancelBtn, "cancel", `Cancel editing @${key}`);
+  const cancelBtn = createUiButton({
+    label: `Cancel editing @${key}`,
+    variant: "icon",
+    density: "compact",
+    icon: "cancel",
+    title: `Cancel editing @${key}`,
+    className: "ui-button--icon-danger",
+  });
 
   actions.append(saveBtn, cancelBtn);
   row.append(keyField, arrow, valField, actions);
@@ -305,12 +301,10 @@ async function addMapping(): Promise<void> {
   const trigger = settings?.trigger ?? DEFAULT_SETTINGS.trigger;
   const error = getNewMappingError(mappings, key, val, trigger);
   if (error) {
-    newKey.classList.add("invalid");
     newKey.setAttribute("aria-invalid", "true");
     showStatus(error, true);
     return;
   }
-  newKey.classList.remove("invalid");
   newKey.removeAttribute("aria-invalid");
   mappings = { ...mappings, [key]: val };
   await saveMappings(mappings);
@@ -362,9 +356,9 @@ function showStatus(text: string, isError: boolean): void {
     statusTimeout = null;
   }
   statusMsg.textContent = text;
-  statusMsg.className = `status status--visible ${isError ? "status--error" : "status--success"}`;
+  statusMsg.className = `ui-notice status status--visible ${isError ? "ui-notice--danger" : "ui-notice--success"}`;
   statusTimeout = window.setTimeout(() => {
-    statusMsg.classList.remove("status--visible", "status--success", "status--error");
+    statusMsg.classList.remove("status--visible", "ui-notice--success", "ui-notice--danger");
   }, 2000);
 }
 
@@ -450,7 +444,6 @@ async function init(): Promise<void> {
   });
   const clearAddError = () => {
     newKey.value = stripAt(newKey.value);
-    newKey.classList.remove("invalid");
     newKey.removeAttribute("aria-invalid");
   };
   newKey.addEventListener("input", clearAddError);

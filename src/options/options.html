@@ -26,16 +26,16 @@
           <span class="setting-title">Enabled by default</span>
           <span class="setting-desc">Activate on all sites except those explicitly disabled.</span>
         </label>
-        <label class="switch">
+        <label class="ui-switch">
           <input type="checkbox" id="global-enabled" />
-          <span class="slider" aria-hidden="true"></span>
+          <span class="ui-switch__track" aria-hidden="true"></span>
         </label>
       </div>
       <div class="setting-row">
-        <div class="text-field text-field-inline">
+        <div class="ui-field text-field-inline">
           <label for="trigger-char">Trigger character</label>
-          <input type="text" id="trigger-char" maxlength="1" inputmode="text" autocomplete="off" aria-describedby="trigger-error" />
-          <span class="field-error" id="trigger-error">Enter a single non-whitespace character.</span>
+          <input class="ui-input" type="text" id="trigger-char" maxlength="1" inputmode="text" autocomplete="off" aria-describedby="trigger-error" />
+          <span class="ui-field__error" id="trigger-error">Enter a single non-whitespace character.</span>
         </div>
       </div>
       <div class="setting-row">
@@ -43,9 +43,9 @@
           <span class="setting-title">Case-sensitive matching</span>
           <span class="setting-desc">Match mapping keys exactly by case.</span>
         </label>
-        <label class="switch">
+        <label class="ui-switch">
           <input type="checkbox" id="case-sensitive" />
-          <span class="slider" aria-hidden="true"></span>
+          <span class="ui-switch__track" aria-hidden="true"></span>
         </label>
       </div>
       <div class="setting-row">
@@ -53,8 +53,8 @@
           <span class="setting-title">Appearance</span>
           <span class="setting-desc">Use your system theme or choose one for the extension.</span>
         </label>
-        <div class="select-field">
-          <select id="theme-select" class="theme-select" aria-label="Appearance">
+        <div class="ui-select-field">
+          <select id="theme-select" class="ui-select theme-select" aria-label="Appearance">
             <option value="auto">System</option>
             <option value="light">Light</option>
             <option value="dark">Dark</option>
@@ -67,47 +67,47 @@
     <section class="tab-panel" id="panel-sites" data-panel="sites" role="tabpanel" aria-labelledby="tab-sites" hidden>
       <p class="section-desc">Sites below override the default. Add a hostname (e.g. <code>github.com</code>) and choose Enabled or Disabled.</p>
       <div class="add-row">
-        <div class="text-field grow">
+        <div class="ui-field grow">
           <label for="site-input">Hostname</label>
-          <input type="text" id="site-input" placeholder="example.com" autocomplete="off" />
+          <input class="ui-input" type="text" id="site-input" placeholder="example.com" autocomplete="off" />
         </div>
-        <div class="select-field">
+        <div class="ui-select-field">
           <label for="site-state">State</label>
-          <select id="site-state">
+          <select class="ui-select" id="site-state">
             <option value="enabled">Enabled</option>
             <option value="disabled">Disabled</option>
           </select>
         </div>
-        <button type="button" class="btn btn-primary" id="add-site">Add</button>
+        <button type="button" class="ui-button ui-button--primary" id="add-site">Add</button>
       </div>
-      <div class="list" id="sites-list"></div>
+      <div class="ui-list" id="sites-list"></div>
     </section>
 
     <section class="tab-panel" id="panel-mappings" data-panel="mappings" role="tabpanel" aria-labelledby="tab-mappings" hidden>
-      <div class="text-field">
+      <div class="ui-field">
         <label for="mapping-search">Search mappings</label>
-        <input type="text" id="mapping-search" placeholder="Filter by key or value…" autocomplete="off" />
+        <input class="ui-input" type="text" id="mapping-search" placeholder="Filter by key or value…" autocomplete="off" />
       </div>
       <div class="add-row">
-        <div class="text-field grow">
+        <div class="ui-field grow">
           <label for="mapping-key">Key</label>
-          <input type="text" id="mapping-key" placeholder="word" autocomplete="off" aria-describedby="mapping-key-error" />
-          <span class="field-error" id="mapping-key-error"></span>
+          <input class="ui-input" type="text" id="mapping-key" placeholder="word" autocomplete="off" aria-describedby="mapping-key-error" />
+          <span class="ui-field__error" id="mapping-key-error"></span>
         </div>
         <div class="arrow">→</div>
-        <div class="text-field grow">
+        <div class="ui-field grow">
           <label for="mapping-val">Replacement</label>
-          <input type="text" id="mapping-val" placeholder="replacement" autocomplete="off" />
+          <input class="ui-input" type="text" id="mapping-val" placeholder="replacement" autocomplete="off" />
         </div>
-        <button type="button" class="btn btn-primary" id="add-mapping">Add</button>
+        <button type="button" class="ui-button ui-button--primary" id="add-mapping">Add</button>
       </div>
-      <div class="list" id="mappings-list"></div>
-      <div class="undo-toast" id="undo-toast" aria-live="polite"></div>
+      <div class="ui-list" id="mappings-list"></div>
+      <div class="ui-toast undo-toast" id="undo-toast" aria-live="polite"></div>
     </section>
 
     <section class="tab-panel" id="panel-data" data-panel="data" role="tabpanel" aria-labelledby="tab-data" hidden>
       <div class="data-row">
-        <button type="button" class="btn btn-secondary" id="export-btn">Export to file</button>
+        <button type="button" class="ui-button ui-button--secondary" id="export-btn">Export to file</button>
       </div>
       <div class="import-box">
         <div class="file-row">
@@ -125,7 +125,7 @@
               <span>Replace</span>
             </label>
           </div>
-          <button type="button" class="btn btn-primary" id="import-btn">Import</button>
+          <button type="button" class="ui-button ui-button--primary" id="import-btn">Import</button>
         </div>
         <div class="import-result" id="import-result" aria-live="polite"></div>
       </div>

@@ -1,0 +1,82 @@
+:root {
+  color-scheme: light;
+  --ui-color-canvas: #f3eee6;
+  --ui-color-surface: #fffaf4;
+  --ui-color-surface-raised: #fffdf9;
+  --ui-color-surface-hover: #f8eee3;
+  --ui-color-text: #2b2520;
+  --ui-color-text-muted: #6d6257;
+  --ui-color-accent: #b45414;
+  --ui-color-accent-hover: #91400d;
+  --ui-color-accent-soft: #f8e5d5;
+  --ui-color-on-accent: #fff9f2;
+  --ui-color-border: #ddd1c3;
+  --ui-color-border-strong: #c8b8a7;
+  --ui-color-danger: #a92b22;
+  --ui-color-danger-soft: #fae7e4;
+  --ui-color-success: #276d49;
+  --ui-color-success-soft: #e4f2e9;
+  --ui-focus-ring: rgba(180, 84, 20, 0.24);
+  --ui-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='m1 1 4 4 4-4' fill='none' stroke='%236d6257' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E");
+  --ui-shadow-raised: 0 14px 36px rgba(58, 40, 24, 0.16);
+  --ui-shadow-overlay: 0 12px 30px rgba(58, 40, 24, 0.18);
+  --ui-font-sans: "Avenir Next", Avenir, "Segoe UI Variable", "Segoe UI", Helvetica, sans-serif;
+  --ui-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --ui-radius-control: 10px;
+  --ui-radius-panel: 18px;
+  --ui-radius-pill: 999px;
+  --ui-motion-fast: 100ms;
+  --ui-motion-standard: 160ms;
+  --ui-motion-slow: 180ms;
+  --ui-motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --ui-color-canvas: #1e1a17;
+  --ui-color-surface: #28231f;
+  --ui-color-surface-raised: #302a25;
+  --ui-color-surface-hover: #392f27;
+  --ui-color-text: #f3ebe2;
+  --ui-color-text-muted: #b8aa9c;
+  --ui-color-accent: #ee9c55;
+  --ui-color-accent-hover: #ffc084;
+  --ui-color-accent-soft: #4a3020;
+  --ui-color-on-accent: #241710;
+  --ui-color-border: #4b423a;
+  --ui-color-border-strong: #65584d;
+  --ui-color-danger: #ff9b91;
+  --ui-color-danger-soft: #472622;
+  --ui-color-success: #8dd3aa;
+  --ui-color-success-soft: #243c2f;
+  --ui-focus-ring: rgba(238, 156, 85, 0.28);
+  --ui-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='m1 1 4 4 4-4' fill='none' stroke='%23b8aa9c' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E");
+  --ui-shadow-raised: 0 18px 44px rgba(0, 0, 0, 0.3);
+  --ui-shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ui-color-canvas: #1e1a17;
+    --ui-color-surface: #28231f;
+    --ui-color-surface-raised: #302a25;
+    --ui-color-surface-hover: #392f27;
+    --ui-color-text: #f3ebe2;
+    --ui-color-text-muted: #b8aa9c;
+    --ui-color-accent: #ee9c55;
+    --ui-color-accent-hover: #ffc084;
+    --ui-color-accent-soft: #4a3020;
+    --ui-color-on-accent: #241710;
+    --ui-color-border: #4b423a;
+    --ui-color-border-strong: #65584d;
+    --ui-color-danger: #ff9b91;
+    --ui-color-danger-soft: #472622;
+    --ui-color-success: #8dd3aa;
+    --ui-color-success-soft: #243c2f;
+    --ui-focus-ring: rgba(238, 156, 85, 0.28);
+    --ui-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='m1 1 4 4 4-4' fill='none' stroke='%23b8aa9c' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E");
+    --ui-shadow-raised: 0 18px 44px rgba(0, 0, 0, 0.3);
+    --ui-shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.3);
+  }
+}

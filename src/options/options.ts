@@ -28,6 +28,7 @@ import {
   getNewMappingError,
 } from "../shared/mappings.js";
 import { makeUndoToast, type UndoToast } from "../shared/undo-toast.js";
+import { createUiButton } from "../ui/index.js";
 
 const els = {
   tabs: getAll("[data-tab]"),
@@ -169,7 +170,7 @@ function setCount(el: HTMLElement, n: number) {
 
 function renderEmpty(text: string): HTMLElement {
   const div = document.createElement("div");
-  div.className = "list-empty";
+  div.className = "ui-empty-state";
   div.textContent = text;
   return div;
 }
@@ -187,34 +188,31 @@ function renderSites() {
     ...hosts.map((host) => {
       const enabled = siteOverrides[host];
       const row = document.createElement("div");
-      row.className = "row";
+      row.className = "ui-list-row";
 
       const main = document.createElement("div");
-      main.className = "row-main";
+      main.className = "ui-list-row__main";
       const name = document.createElement("span");
-      name.className = "row-name";
+      name.className = "ui-list-row__content row-name";
       const code = document.createElement("code");
       code.textContent = host;
       name.appendChild(code);
       const badge = document.createElement("span");
-      badge.className = `badge ${enabled ? "badge-enabled" : "badge-disabled"}`;
+      badge.className = `ui-badge ${enabled ? "ui-badge--success" : "ui-badge--danger"}`;
       badge.textContent = enabled ? "Enabled" : "Disabled";
       main.append(name, badge);
 
       const actions = document.createElement("div");
-      actions.className = "row-actions";
-      const toggleBtn = document.createElement("button");
-      toggleBtn.type = "button";
-      toggleBtn.className = "btn btn-secondary";
+      actions.className = "ui-list-row__actions";
+      const toggleBtn = createUiButton({
+        label: enabled ? "Disable" : "Enable",
+        variant: "secondary",
+      });
       toggleBtn.dataset.action = "toggle";
       toggleBtn.dataset.host = host;
-      toggleBtn.textContent = enabled ? "Disable" : "Enable";
-      const removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className = "btn btn-danger";
+      const removeBtn = createUiButton({ label: "Remove", variant: "danger" });
       removeBtn.dataset.action = "remove";
       removeBtn.dataset.host = host;
-      removeBtn.textContent = "Remove";
       actions.append(toggleBtn, removeBtn);
 
       row.append(main, actions);
@@ -237,34 +235,28 @@ function renderMappings() {
     ...entries.map(([key, val]) => {
       if (editingKey === key) return renderEditRow(key, val);
       const row = document.createElement("div");
-      row.className = "row";
+      row.className = "ui-list-row";
 
       const main = document.createElement("div");
-      main.className = "row-main";
+      main.className = "ui-list-row__main";
       const triggerCode = document.createElement("span");
-      triggerCode.className = "row-name";
+      triggerCode.className = "ui-list-row__content row-name";
       const trigger = document.createElement("code");
       trigger.textContent = settings.trigger + key;
       triggerCode.appendChild(trigger);
       const value = document.createElement("span");
-      value.className = "row-name";
+      value.className = "ui-list-row__content row-name";
       value.textContent = val;
       main.append(triggerCode, value);
 
       const actions = document.createElement("div");
-      actions.className = "row-actions";
-      const editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.className = "btn btn-secondary";
+      actions.className = "ui-list-row__actions";
+      const editBtn = createUiButton({ label: "Edit", variant: "secondary" });
       editBtn.dataset.action = "edit";
       editBtn.dataset.key = key;
-      editBtn.textContent = "Edit";
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "btn btn-danger";
+      const deleteBtn = createUiButton({ label: "Delete", variant: "danger" });
       deleteBtn.dataset.action = "delete";
       deleteBtn.dataset.key = key;
-      deleteBtn.textContent = "Delete";
       actions.append(editBtn, deleteBtn);
 
       row.append(main, actions);
@@ -275,20 +267,21 @@ function renderMappings() {
 
 function renderEditRow(key: string, val: string): HTMLElement {
   const row = document.createElement("div");
-  row.className = "row editing";
+  row.className = "ui-list-row editing";
+  row.dataset.editing = "true";
 
   const main = document.createElement("div");
-  main.className = "row-main";
+  main.className = "ui-list-row__main";
 
   const keyWrap = document.createElement("div");
-  keyWrap.className = "text-field grow";
+  keyWrap.className = "ui-field grow";
 
   const arrow = document.createElement("div");
   arrow.className = "arrow";
   arrow.textContent = "→";
 
   const valWrap = document.createElement("div");
-  valWrap.className = "text-field grow";
+  valWrap.className = "ui-field grow";
 
   const fields = createEditFields({
     key,
@@ -310,6 +303,8 @@ function renderEditRow(key: string, val: string): HTMLElement {
   });
   fields.keyInput.setAttribute("aria-label", "Shortcut");
   fields.valInput.setAttribute("aria-label", "Replacement text");
+  fields.keyInput.className = "ui-input";
+  fields.valInput.className = "ui-input";
   fields.keyInput.placeholder = "Key";
   fields.valInput.placeholder = "Replacement";
   keyWrap.appendChild(fields.keyInput);
@@ -318,21 +313,21 @@ function renderEditRow(key: string, val: string): HTMLElement {
   main.append(keyWrap, arrow, valWrap);
 
   const actions = document.createElement("div");
-  actions.className = "row-actions";
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "button";
-  saveBtn.className = "btn btn-success";
+  actions.className = "ui-list-row__actions";
+  const saveBtn = createUiButton({
+    label: "Save",
+    variant: "success",
+    title: "Save",
+    ariaLabel: `Save ${settings.trigger}${key}`,
+  });
   saveBtn.dataset.action = "save-edit";
-  saveBtn.title = "Save";
-  saveBtn.setAttribute("aria-label", `Save ${settings.trigger}${key}`);
-  saveBtn.textContent = "Save";
-  const cancelBtn = document.createElement("button");
-  cancelBtn.type = "button";
-  cancelBtn.className = "btn btn-danger";
+  const cancelBtn = createUiButton({
+    label: "Cancel",
+    variant: "danger",
+    title: "Cancel",
+    ariaLabel: `Cancel editing ${settings.trigger}${key}`,
+  });
   cancelBtn.dataset.action = "cancel-edit";
-  cancelBtn.title = "Cancel";
-  cancelBtn.setAttribute("aria-label", `Cancel editing ${settings.trigger}${key}`);
-  cancelBtn.textContent = "Cancel";
   actions.append(saveBtn, cancelBtn);
 
   row.append(main, actions);
@@ -382,7 +377,6 @@ function bindGeneral() {
 function validateTrigger(): boolean {
   const value = els.trigger.value;
   const ok = value.length === 1 && !/\s/.test(value);
-  els.trigger.classList.toggle("invalid", !ok);
   els.trigger.setAttribute("aria-invalid", String(!ok));
   return ok;
 }
@@ -427,12 +421,10 @@ function bindMappings() {
     const val = els.mappingVal.value.trim();
     const error = getNewMappingError(mappings, key, val, settings.trigger);
     if (error) {
-      els.mappingKey.classList.add("invalid");
       els.mappingKey.setAttribute("aria-invalid", "true");
       els.mappingKeyError.textContent = error;
       return;
     }
-    els.mappingKey.classList.remove("invalid");
     els.mappingKey.removeAttribute("aria-invalid");
     els.mappingKeyError.textContent = "";
     mappings = { ...mappings, [key]: val };
@@ -443,7 +435,6 @@ function bindMappings() {
   };
   els.addMapping.addEventListener("click", add);
   const clearMappingError = () => {
-    els.mappingKey.classList.remove("invalid");
     els.mappingKey.removeAttribute("aria-invalid");
     els.mappingKeyError.textContent = "";
   };
@@ -490,10 +481,7 @@ function showUndoToast() {
 
   const msg = document.createElement("span");
   msg.textContent = `Deleted ${settings.trigger}${deletedMapping.key}`;
-  const undoBtn = document.createElement("button");
-  undoBtn.type = "button";
-  undoBtn.className = "btn btn-primary";
-  undoBtn.textContent = "Undo";
+  const undoBtn = createUiButton({ label: "Undo", variant: "primary" });
   undoBtn.addEventListener("click", () => {
     if (!deletedMapping) return;
     mappings = { ...mappings, [deletedMapping.key]: deletedMapping.val };
