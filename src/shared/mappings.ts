@@ -21,6 +21,10 @@ export function getMappingEmptyMessage(total: number, query: string): string {
   return "No mappings to show.";
 }
 
+export function formatMappingShortcut(trigger: string, key: string): string {
+  return `${trigger}${key}`;
+}
+
 export function getNewMappingError(
   mappings: Mappings,
   key: string,

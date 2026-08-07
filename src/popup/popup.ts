@@ -17,6 +17,7 @@ import { applyTheme, themeLabel, themeName } from "../shared/theme.js";
 import {
   filterAndSortMappings,
   createEditFields,
+  formatMappingShortcut,
   getMappingEmptyMessage,
   getNewMappingError,
 } from "../shared/mappings.js";
@@ -102,6 +103,10 @@ function getFilteredEntries(): [string, string][] {
   return filterAndSortMappings(mappings, searchInput.value);
 }
 
+function mappingShortcut(key: string): string {
+  return formatMappingShortcut(settings?.trigger ?? DEFAULT_SETTINGS.trigger, key);
+}
+
 function renderToggle(): void {
   if (!hostname) {
     hostBadge.textContent = "";
@@ -147,7 +152,7 @@ function createDisplayRow(key: string, value: string): HTMLLIElement {
 
   const keySpan = document.createElement("span");
   keySpan.className = "mapping__key";
-  keySpan.textContent = `@${key}`;
+  keySpan.textContent = mappingShortcut(key);
 
   const sep = document.createElement("span");
   sep.className = "mapping__sep";
@@ -165,20 +170,20 @@ function createDisplayRow(key: string, value: string): HTMLLIElement {
   actions.className = "ui-list-row__actions mapping__actions";
 
   const editBtn = createUiButton({
-    label: `Edit @${key}`,
+    label: `Edit ${mappingShortcut(key)}`,
     variant: "icon",
     density: "compact",
     icon: "edit",
-    title: `Edit @${key}`,
+    title: `Edit ${mappingShortcut(key)}`,
   });
   editBtn.addEventListener("click", () => startEdit(key));
 
   const deleteBtn = createUiButton({
-    label: `Delete @${key}`,
+    label: `Delete ${mappingShortcut(key)}`,
     variant: "icon",
     density: "compact",
     icon: "delete",
-    title: `Delete @${key}`,
+    title: `Delete ${mappingShortcut(key)}`,
     className: "ui-button--icon-danger",
   });
   deleteBtn.addEventListener("click", (e) => {
@@ -236,19 +241,19 @@ function createEditRow(key: string, value: string): HTMLLIElement {
   actions.className = "ui-list-row__actions mapping__actions";
 
   const saveBtn = createUiButton({
-    label: `Save @${key}`,
+    label: `Save ${mappingShortcut(key)}`,
     variant: "icon",
     density: "compact",
     icon: "save",
-    title: `Save @${key}`,
+    title: `Save ${mappingShortcut(key)}`,
   });
 
   const cancelBtn = createUiButton({
-    label: `Cancel editing @${key}`,
+    label: `Cancel editing ${mappingShortcut(key)}`,
     variant: "icon",
     density: "compact",
     icon: "cancel",
-    title: `Cancel editing @${key}`,
+    title: `Cancel editing ${mappingShortcut(key)}`,
     className: "ui-button--icon-danger",
   });
 
@@ -328,7 +333,7 @@ async function deleteMapping(key: string): Promise<void> {
 
 function showUndo(key: string, value: string): void {
   lastDeleted = { key, value };
-  undoText.textContent = `Deleted @${key}`;
+  undoText.textContent = `Deleted ${mappingShortcut(key)}`;
   undoToastCtrl?.show();
 }
 
@@ -407,6 +412,7 @@ async function initData(): Promise<void> {
   siteOverrides = loadedOverrides;
   mappings = loadedMappings;
   hostname = await getCurrentTabHostname();
+  newKey.placeholder = mappingShortcut("word");
 }
 
 async function init(): Promise<void> {
@@ -461,6 +467,7 @@ async function init(): Promise<void> {
     if (changes.settings !== undefined) {
       settings = changes.settings;
       applyThemeToDoc(settings.theme);
+      newKey.placeholder = mappingShortcut("word");
     }
     renderToggle();
     renderMappings();
