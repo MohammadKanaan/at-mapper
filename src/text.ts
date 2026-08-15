@@ -133,7 +133,7 @@ export function replaceToken(el: HTMLElement, kind: EditorKind, token: TokenCont
   sel.removeAllRanges();
   sel.addRange(r);
 
-  let ok = false;
+  let ok: boolean;
   try {
     ok = document.execCommand("insertText", false, replacement);
   } catch {

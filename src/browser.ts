@@ -8,6 +8,7 @@
  * We prefer `chrome.*` everywhere for uniformity, but fall back to
  * `browser.*` if `chrome` is undefined (e.g. some sandboxed test contexts).
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const browser: typeof chrome;
 
 const g = globalThis as unknown as { chrome?: typeof chrome; __atm_chrome?: typeof chrome; browser?: typeof chrome };

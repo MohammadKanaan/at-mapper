@@ -3,7 +3,7 @@ import { injectStyles } from "../styles.js";
 import { getTokenBeforeCaret, replaceToken } from "../text.js";
 import type { AutocompleteState } from "./items.js";
 import { hasMapping, matchingMappings } from "./items.js";
-import { showPopup, hidePopup, placePopup } from "./popup.js";
+import { showPopup, hidePopup } from "./popup.js";
 import { updateComboboxAttrs } from "./aria.js";
 import { activateAddForm } from "./add-form.js";
 import { onKeyDown } from "./keyboard.js";

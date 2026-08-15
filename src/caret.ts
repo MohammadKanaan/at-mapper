@@ -13,6 +13,7 @@ function buildMirror(src: HTMLTextAreaElement | HTMLInputElement, position: numb
   const div = document.createElement("div");
   const style = getComputedStyle(src);
   const span = document.createElement("span");
+  // eslint-disable-next-line no-useless-assignment
   let coords = { left: 0, top: 0 };
   try {
     Object.assign(div.style, {

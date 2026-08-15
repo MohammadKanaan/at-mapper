@@ -1,5 +1,5 @@
 import { b } from "../browser.js";
-import { currentHostname, isSiteEnabled } from "../host.js";
+import { isSiteEnabled } from "../host.js";
 import {
   loadMappings,
   loadSettings,
