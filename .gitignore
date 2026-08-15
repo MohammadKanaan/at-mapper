@@ -1,2 +1,16 @@
 dist/
 node_modules/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Env
+.env
+.env.*
+
+# Editor
+.vscode/
+.zed/
