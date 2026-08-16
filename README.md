@@ -12,7 +12,7 @@
 
 ## Requirements
 
-- Node.js 18 or later
+- Bun, and Node.js 18+ (the test runner uses `node --test`)
 - A Chromium-based browser (Chrome, Edge, Brave, etc.) or Firefox 121+
 
 ## Install and build
@@ -20,8 +20,8 @@
 Install dependencies, then build the default Chromium package:
 
 ```bash
-npm ci
-npm run build
+bun install --frozen-lockfile
+bun run build
 ```
 
 The loadable extension is generated in `dist/`.
@@ -29,12 +29,12 @@ The loadable extension is generated in `dist/`.
 For local development:
 
 ```bash
-npm run watch      # Recompile TypeScript on changes
-npm run typecheck  # Check types without writing dist/
-npm test           # Build, then run the Node test suite
+bun run watch      # Recompile TypeScript on changes
+bun run typecheck  # Check types without writing dist/
+bun run test       # Build, then run the Node test suite
 ```
 
-Run `npm run build` after changing static assets or the manifest.
+Run `bun run build` after changing static assets or the manifest.
 
 ## Load the extension
 
@@ -50,7 +50,7 @@ Run `npm run build` after changing static assets or the manifest.
 Build the Firefox-compatible package first:
 
 ```bash
-npm run build:firefox
+bun run build:firefox
 ```
 
 Then:

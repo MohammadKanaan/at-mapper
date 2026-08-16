@@ -10,7 +10,7 @@
     "copy-static": "node scripts/copy-static.mjs",
     "build": "npm run clean && npm run make-icons && tsc && npm run copy-static",
     "build:firefox": "TARGET=firefox npm run build",
-    "test": "npm run build && node --test tests/*.test.mjs",
+    "test": "bun run build && node --test tests/*.test.mjs",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "watch": "tsc --watch"
