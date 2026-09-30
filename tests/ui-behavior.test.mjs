@@ -64,7 +64,7 @@ test("adding a mapping from autocomplete immediately replaces the active token",
     const hidePopup = () => {
       state.active = null;
     };
-    const applyMapping = (_key, value) => {
+    const applyMapping = (value) => {
       if (state.active) replacement = value;
       hidePopup();
     };

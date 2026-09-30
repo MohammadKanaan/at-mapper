@@ -12,7 +12,7 @@
 
 ## Requirements
 
-- Bun, and Node.js 18+ (the test runner uses `node --test`)
+- Bun, and Node.js 20.19+ (the test runner uses `node --test`)
 - A Chromium-based browser (Chrome, Edge, Brave, etc.) or Firefox 121+
 
 ## Install and build

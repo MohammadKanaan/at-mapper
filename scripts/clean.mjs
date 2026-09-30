@@ -1,5 +1,8 @@
 import { rmSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-rmSync(resolve(process.cwd(), "dist"), { recursive: true, force: true });
+const root = resolve(fileURLToPath(import.meta.url), "..", "..");
+
+rmSync(resolve(root, "dist"), { recursive: true, force: true });
 console.log("dist/ cleaned");

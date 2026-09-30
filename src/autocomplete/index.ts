@@ -54,7 +54,7 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
     updateComboboxAttrs(state);
   }
 
-  function applyMapping(key: string, val: string): void {
+  function applyMapping(val: string): void {
     if (!state.active) return hidePopupInternal();
     replaceToken(state.active.target.el, state.active.target.kind, state.active.token, val);
     hidePopupInternal();
@@ -106,10 +106,6 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
     showPopupForToken(target, token);
   }
 
-  function onInput(target: EditorTarget): void {
-    detectToken(target);
-  }
-
   function onCompositionStart(): void {
     state.composing = true;
   }
@@ -136,10 +132,10 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
     if (state.attached.has(target.el)) return;
     const inputHandler = (e: Event) => {
       if (e.target !== target.el) return;
-      onInput(target);
+      detectToken(target);
     };
     const keydownHandler = (e: KeyboardEvent) =>
-      onKeyDown(state, target, e, setSelected, applyMapping, hidePopupInternal, doActivateAddForm);
+      onKeyDown(state, e, setSelected, applyMapping, hidePopupInternal, doActivateAddForm);
     const compStartHandler = () => onCompositionStart();
     const compEndHandler = () => onCompositionEnd(target);
     const blurHandler = () => onBlur();

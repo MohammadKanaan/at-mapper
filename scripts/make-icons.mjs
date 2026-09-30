@@ -6,8 +6,9 @@
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ICONS_DIR = resolve(process.cwd(), "icons");
+const ICONS_DIR = resolve(fileURLToPath(import.meta.url), "..", "..", "icons");
 const SIZES = [16, 32, 48, 128];
 const AMBER = [180, 84, 20, 255];
 const AMBER_DARK = [145, 64, 13, 255];

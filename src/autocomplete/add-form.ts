@@ -6,7 +6,7 @@ export function activateAddForm(
   addRowEl: HTMLElement,
   trigger: string,
   addMapping: (key: string, val: string) => void,
-  applyMapping: (key: string, val: string) => void,
+  applyMapping: (val: string) => void,
   hidePopup: () => void,
   updateComboboxAttrs: () => void,
 ): void {
@@ -42,7 +42,7 @@ export function activateAddForm(
       const v = input.value.trim();
       if (!v) return;
       addMapping(word, v);
-      applyMapping(word, v);
+      applyMapping(v);
       hidePopup();
     } else if (e.key === "Escape") {
       e.preventDefault();

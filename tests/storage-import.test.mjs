@@ -69,7 +69,6 @@ test("loadSettings merges partial saved settings with defaults", async () => {
   mockStorage._store["atm_settings"] = { trigger: "/" };
   // Clear the sync key
   const syncStore = mockStorage._store;
-  const original = { ...syncStore };
   // Directly set partial data in the store
   syncStore["atm_settings"] = { trigger: "/" };
   const loaded = await storage.loadSettings();
