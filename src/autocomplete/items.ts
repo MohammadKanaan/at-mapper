@@ -44,14 +44,19 @@ export function matchingMappings(
     .sort((a, b) => a[0].localeCompare(b[0]));
 }
 
+/** Callbacks the popup UI uses to report user interaction back to the controller. */
+export interface PopupHandlers {
+  onApply: (val: string) => void;
+  onSelect: (idx: number) => void;
+  onActivateAdd: (word: string, el: HTMLElement) => void;
+}
+
 export function renderItems(
   container: HTMLElement,
   items: PopupItem[],
   selectedIdx: number,
   trigger: string,
-  onApply: (val: string) => void,
-  onSelect: (i: number) => void,
-  onActivateAdd: (word: string, el: HTMLElement) => void,
+  { onApply, onSelect, onActivateAdd }: PopupHandlers,
 ): void {
   items.forEach((item, i) => {
     if (item.type === "mapping") {

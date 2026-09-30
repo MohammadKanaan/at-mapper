@@ -1,15 +1,23 @@
 import { BLUR_HIDE_DELAY_MS } from "../constants.js";
 import type { AutocompleteState } from "./items.js";
 
+export interface AddFormOptions {
+  word: string;
+  addRowEl: HTMLElement;
+  trigger: string;
+}
+
+export interface AddFormActions {
+  addMapping: (key: string, val: string) => void;
+  applyMapping: (val: string) => void;
+  hidePopup: () => void;
+  updateComboboxAttrs: () => void;
+}
+
 export function activateAddForm(
   state: AutocompleteState,
-  word: string,
-  addRowEl: HTMLElement,
-  trigger: string,
-  addMapping: (key: string, val: string) => void,
-  applyMapping: (val: string) => void,
-  hidePopup: () => void,
-  updateComboboxAttrs: () => void,
+  { word, addRowEl, trigger }: AddFormOptions,
+  { addMapping, applyMapping, hidePopup, updateComboboxAttrs }: AddFormActions,
 ): void {
   if (!state.active || !state.popup) return;
   addRowEl.textContent = "";

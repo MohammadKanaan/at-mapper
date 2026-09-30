@@ -1,12 +1,16 @@
 import type { AutocompleteState } from "./items.js";
 
+export interface KeyboardActions {
+  setSelected: (idx: number) => void;
+  applyMapping: (val: string) => void;
+  hidePopup: () => void;
+  activateAddForm: (word: string, el: HTMLElement) => void;
+}
+
 export function onKeyDown(
   state: AutocompleteState,
   e: KeyboardEvent,
-  setSelected: (idx: number) => void,
-  applyMapping: (val: string) => void,
-  hidePopup: () => void,
-  activateAddForm: (word: string, el: HTMLElement) => void,
+  { setSelected, applyMapping, hidePopup, activateAddForm }: KeyboardActions,
 ): void {
   if (!state.popup) return;
   if (state.composing) return;

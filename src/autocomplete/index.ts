@@ -1,5 +1,5 @@
 import { BLUR_HIDE_DELAY_MS, DEFAULT_TRIGGER } from "../constants.js";
-import type { EditorTarget, TokenContext } from "../types.js";
+import type { EditorTarget, Mappings, Settings, TokenContext } from "../types.js";
 import { injectStyles } from "../styles.js";
 import { getTokenBeforeCaret, replaceToken } from "../text.js";
 import type { AutocompleteState } from "./items.js";
@@ -7,13 +7,14 @@ import { hasMapping, matchingMappings } from "./items.js";
 import { showPopup, hidePopup } from "./popup.js";
 import { updateComboboxAttrs } from "./aria.js";
 import { activateAddForm } from "./add-form.js";
+import type { KeyboardActions } from "./keyboard.js";
 import { onKeyDown } from "./keyboard.js";
 
 injectStyles();
 
 export interface AutocompleteCallbacks {
-  getMappings: () => Record<string, string>;
-  getSettings: () => { trigger: string; caseSensitive: boolean };
+  getMappings: () => Mappings;
+  getSettings: () => Pick<Settings, "trigger" | "caseSensitive">;
   addMapping: (key: string, val: string) => void;
 }
 
@@ -21,7 +22,6 @@ export interface AutocompleteController {
   attach(target: EditorTarget): void;
   detach(target: EditorTarget): void;
   hidePopup(): void;
-  destroy(): void;
 }
 
 export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteController {
@@ -34,6 +34,9 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
     items: [],
     attached: new Map<HTMLElement, EditorTarget>(),
   };
+
+  /** Removes the listeners attach() registered on each editor. */
+  const cleanups = new WeakMap<HTMLElement, () => void>();
 
   function getTrigger(): string {
     return cb.getSettings().trigger || DEFAULT_TRIGGER;
@@ -64,13 +67,13 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
   function doActivateAddForm(word: string, el: HTMLElement): void {
     activateAddForm(
       state,
-      word,
-      el,
-      getTrigger(),
-      cb.addMapping,
-      applyMapping,
-      hidePopupInternal,
-      () => updateComboboxAttrs(state),
+      { word, addRowEl: el, trigger: getTrigger() },
+      {
+        addMapping: cb.addMapping,
+        applyMapping,
+        hidePopup: hidePopupInternal,
+        updateComboboxAttrs: () => updateComboboxAttrs(state),
+      },
     );
   }
 
@@ -82,14 +85,8 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
     const hasExisting = hasMapping(mappings, caseSensitive, token.word);
     showPopup(
       state,
-      target,
-      token,
-      trigger,
-      matches,
-      hasExisting,
-      applyMapping,
-      setSelected,
-      doActivateAddForm,
+      { target, token, trigger, matches, hasExisting },
+      { onApply: applyMapping, onSelect: setSelected, onActivateAdd: doActivateAddForm },
     );
     updateComboboxAttrs(state);
   }
@@ -129,14 +126,20 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
     hidePopupInternal();
   }
 
+  const keyboardActions: KeyboardActions = {
+    setSelected,
+    applyMapping,
+    hidePopup: hidePopupInternal,
+    activateAddForm: doActivateAddForm,
+  };
+
   function attach(target: EditorTarget): void {
     if (state.attached.has(target.el)) return;
     const inputHandler = (e: Event) => {
       if (e.target !== target.el) return;
       detectToken(target);
     };
-    const keydownHandler = (e: KeyboardEvent) =>
-      onKeyDown(state, e, setSelected, applyMapping, hidePopupInternal, doActivateAddForm);
+    const keydownHandler = (e: KeyboardEvent) => onKeyDown(state, e, keyboardActions);
     const compStartHandler = () => onCompositionStart();
     const compEndHandler = () => onCompositionEnd(target);
     const blurHandler = () => onBlur();
@@ -151,34 +154,22 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
     target.el.addEventListener("compositionend", compEndHandler);
     target.el.addEventListener("blur", blurHandler);
 
-    (target.el as unknown as { __atm_cleanup?: () => void }).__atm_cleanup = () => {
+    cleanups.set(target.el, () => {
       target.el.removeEventListener("input", inputHandler);
       target.el.removeEventListener("keydown", keydownHandler, true);
       target.el.removeEventListener("compositionstart", compStartHandler);
       target.el.removeEventListener("compositionend", compEndHandler);
       target.el.removeEventListener("blur", blurHandler);
       state.attached.delete(target.el);
-    };
+    });
   }
 
   function detach(target: EditorTarget): void {
-    const cleanup = (target.el as unknown as { __atm_cleanup?: () => void }).__atm_cleanup;
-    if (cleanup) {
-      cleanup();
-      delete (target.el as unknown as { __atm_cleanup?: () => void }).__atm_cleanup;
-    }
+    cleanups.get(target.el)?.();
+    cleanups.delete(target.el);
     if (state.active?.target.el === target.el) {
       hidePopupInternal();
     }
-  }
-
-  function destroy(): void {
-    hidePopupInternal();
-    for (const target of state.attached.values()) {
-      detach(target);
-    }
-    window.removeEventListener("scroll", hidePopupOnScrollOrResize, true);
-    window.removeEventListener("resize", hidePopupOnScrollOrResize);
   }
 
   window.addEventListener("scroll", hidePopupOnScrollOrResize, true);
@@ -188,6 +179,5 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
     attach,
     detach,
     hidePopup: hidePopupInternal,
-    destroy,
   };
 }

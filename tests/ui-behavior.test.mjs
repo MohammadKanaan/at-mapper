@@ -71,13 +71,13 @@ test("adding a mapping from autocomplete immediately replaces the active token",
 
     activateAddForm(
       state,
-      "sig",
-      addRow,
-      "@",
-      (key, value) => added.push([key, value]),
-      applyMapping,
-      hidePopup,
-      () => {},
+      { word: "sig", addRowEl: addRow, trigger: "@" },
+      {
+        addMapping: (key, value) => added.push([key, value]),
+        applyMapping,
+        hidePopup,
+        updateComboboxAttrs: () => {},
+      },
     );
 
     addRow.child.value = "Best regards";
