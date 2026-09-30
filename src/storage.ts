@@ -71,26 +71,50 @@ export async function buildExportPayload(): Promise<ExportPayload> {
   return { version: EXPORT_VERSION, mappings, settings, siteOverrides };
 }
 
-export async function applyImport(payload: ExportPayload, mode: ImportMode): Promise<ImportResult> {
-  if (!payload || typeof payload !== "object") return { ok: false, error: "Invalid payload" };
-  if (payload.version !== EXPORT_VERSION) return { ok: false, error: `Unsupported version ${payload.version}` };
-  if (!payload.mappings || typeof payload.mappings !== "object") return { ok: false, error: "Invalid mappings" };
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
+function validateImportPayload(payload: ExportPayload): string | null {
+  if (!isPlainObject(payload)) return "Invalid payload";
+  if (payload.version !== EXPORT_VERSION) return `Unsupported version ${payload.version}`;
+  if (!isPlainObject(payload.mappings)) return "Invalid mappings";
+  if (!Object.values(payload.mappings).every((v) => typeof v === "string")) {
+    return "Invalid mappings: every replacement must be text";
+  }
+  if (payload.settings !== undefined && !isPlainObject(payload.settings)) return "Invalid settings";
+  if (payload.siteOverrides !== undefined) {
+    if (!isPlainObject(payload.siteOverrides)) return "Invalid site overrides";
+    if (!Object.values(payload.siteOverrides).every((v) => typeof v === "boolean")) {
+      return "Invalid site overrides: every value must be true or false";
+    }
+  }
+  return null;
+}
+
+export async function applyImport(payload: ExportPayload, mode: ImportMode): Promise<ImportResult> {
+  const error = validateImportPayload(payload);
+  if (error) return { ok: false, error };
+
+  const importedSettings = payload.settings ?? {};
+  const importedOverrides = payload.siteOverrides ?? {};
   try {
     if (mode === "replace") {
       await saveMappings(payload.mappings);
-      await saveSettings({ ...DEFAULT_SETTINGS, ...(payload.settings ?? {}) });
-      await saveSiteOverrides(payload.siteOverrides ?? {});
-      return { ok: true, imported: { mappings: Object.keys(payload.mappings).length, siteOverrides: Object.keys(payload.siteOverrides ?? {}).length } };
+      await saveSettings({ ...DEFAULT_SETTINGS, ...importedSettings });
+      await saveSiteOverrides(importedOverrides);
+    } else {
+      await saveMappings({ ...(await loadMappings()), ...payload.mappings });
+      await saveSettings({ ...(await loadSettings()), ...importedSettings });
+      await saveSiteOverrides({ ...(await loadSiteOverrides()), ...importedOverrides });
     }
-    const existing = await loadMappings();
-    const merged: Mappings = { ...existing, ...payload.mappings };
-    await saveMappings(merged);
-    const existingSettings = await loadSettings();
-    await saveSettings({ ...existingSettings, ...(payload.settings ?? {}) });
-    const existingOverrides = await loadSiteOverrides();
-    await saveSiteOverrides({ ...existingOverrides, ...(payload.siteOverrides ?? {}) });
-    return { ok: true, imported: { mappings: Object.keys(payload.mappings).length, siteOverrides: Object.keys(payload.siteOverrides ?? {}).length } };
+    return {
+      ok: true,
+      imported: {
+        mappings: Object.keys(payload.mappings).length,
+        siteOverrides: Object.keys(importedOverrides).length,
+      },
+    };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
@@ -114,7 +138,7 @@ export async function importFromFile(file: File, mode: ImportMode): Promise<Impo
   const text = await file.text();
   let payload: ExportPayload;
   try {
-    payload = JSON.parse(text);
+    payload = JSON.parse(text) as ExportPayload;
   } catch {
     return { ok: false, error: "File is not valid JSON" };
   }
