@@ -1,3 +1,4 @@
+import { FALLBACK_POPUP_WIDTH_PX } from "../constants.js";
 import type { EditorTarget, TokenContext } from "../types.js";
 import { POPUP_ID, POPUP_GAP, POPUP_MAX_HEIGHT } from "../styles.js";
 import { getCaretCoords } from "../caret.js";
@@ -26,7 +27,7 @@ export function placePopup(
   } else {
     state.popup.style.top = `${below}px`;
   }
-  const popupWidth = state.popup.getBoundingClientRect().width || 220;
+  const popupWidth = state.popup.getBoundingClientRect().width || FALLBACK_POPUP_WIDTH_PX;
   state.popup.style.left = `${clampPopupLeft(coords.left, window.innerWidth, popupWidth, POPUP_GAP)}px`;
 }
 
@@ -37,7 +38,7 @@ export function showPopup(
   trigger: string,
   matches: [string, string][],
   hasExisting: boolean,
-  onApply: (key: string, val: string) => void,
+  onApply: (val: string) => void,
   onSelect: (i: number) => void,
   onActivateAdd: (word: string, el: HTMLElement) => void,
 ): void {

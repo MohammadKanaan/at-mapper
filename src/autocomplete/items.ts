@@ -22,16 +22,14 @@ export interface AutocompleteState {
   attached: Map<HTMLElement, EditorTarget>;
 }
 
-export function hasMapping(
-  mappings: Mappings,
-  caseSensitive: boolean,
-  word: string,
-): boolean {
-  if (caseSensitive) {
-    return Object.prototype.hasOwnProperty.call(mappings, word);
-  }
-  const w = word.toLowerCase();
-  return Object.keys(mappings).some((k) => k.toLowerCase() === w);
+function normalizer(caseSensitive: boolean): (s: string) => string {
+  return caseSensitive ? (s) => s : (s) => s.toLowerCase();
+}
+
+export function hasMapping(mappings: Mappings, caseSensitive: boolean, word: string): boolean {
+  const norm = normalizer(caseSensitive);
+  const w = norm(word);
+  return Object.keys(mappings).some((k) => norm(k) === w);
 }
 
 export function matchingMappings(
@@ -39,14 +37,10 @@ export function matchingMappings(
   caseSensitive: boolean,
   word: string,
 ): [string, string][] {
-  if (caseSensitive) {
-    return Object.entries(mappings)
-      .filter(([k]) => k.includes(word))
-      .sort((a, b) => a[0].localeCompare(b[0]));
-  }
-  const w = word.toLowerCase();
+  const norm = normalizer(caseSensitive);
+  const w = norm(word);
   return Object.entries(mappings)
-    .filter(([k]) => k.toLowerCase().includes(w))
+    .filter(([k]) => norm(k).includes(w))
     .sort((a, b) => a[0].localeCompare(b[0]));
 }
 
@@ -55,7 +49,7 @@ export function renderItems(
   items: PopupItem[],
   selectedIdx: number,
   trigger: string,
-  onApply: (key: string, val: string) => void,
+  onApply: (val: string) => void,
   onSelect: (i: number) => void,
   onActivateAdd: (word: string, el: HTMLElement) => void,
 ): void {
@@ -77,7 +71,7 @@ export function renderItems(
       el.append(k, v);
       el.addEventListener("mousedown", (e) => {
         e.preventDefault();
-        onApply(item.key, item.val);
+        onApply(item.val);
       });
       el.addEventListener("mouseenter", () => onSelect(i));
       container.appendChild(el);

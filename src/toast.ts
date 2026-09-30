@@ -1,3 +1,4 @@
+import { TOAST_DURATION_MS } from "./constants.js";
 import { injectStyles } from "./styles.js";
 
 let toastEl: HTMLDivElement | null = null;
@@ -16,7 +17,7 @@ export function showToast(msg: string): void {
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     toastEl?.classList.remove("atm-toast--visible");
-  }, 4000);
+  }, TOAST_DURATION_MS);
 }
 
 injectStyles();

@@ -1,3 +1,4 @@
+import { TOAST_DURATION_MS } from "../constants.js";
 import { b } from "../browser.js";
 import { isSiteEnabled } from "../host.js";
 import {
@@ -425,7 +426,7 @@ async function init(): Promise<void> {
   undoToastCtrl = makeUndoToast({
     toastEl: undoToast,
     visibleClass: "toast--visible",
-    durationMs: 4000,
+    durationMs: TOAST_DURATION_MS,
     onExpire: () => {
       lastDeleted = null;
     },

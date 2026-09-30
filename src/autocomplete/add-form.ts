@@ -1,3 +1,4 @@
+import { BLUR_HIDE_DELAY_MS } from "../constants.js";
 import type { AutocompleteState } from "./items.js";
 
 export function activateAddForm(
@@ -55,6 +56,6 @@ export function activateAddForm(
     setTimeout(() => {
       if (!state.popup || !state.popup.contains(input)) return;
       restore();
-    }, 150);
+    }, BLUR_HIDE_DELAY_MS);
   });
 }

@@ -41,8 +41,8 @@ export async function saveSiteOverrides(o: SiteOverrides): Promise<void> {
   await b.storage.sync.set({ [STORAGE_KEYS.siteOverrides]: o });
 }
 
-export type StorageChange<T> = { oldValue?: T; newValue?: T };
-export type StorageChanges = Record<string, StorageChange<unknown>>;
+type StorageChange<T> = { oldValue?: T; newValue?: T };
+type StorageChanges = Record<string, StorageChange<unknown>>;
 
 export function onStorageChanged(
   cb: (changes: { mappings?: Mappings; settings?: Settings; siteOverrides?: SiteOverrides }) => void,

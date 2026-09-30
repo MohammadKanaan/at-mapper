@@ -46,6 +46,7 @@
         "autocomplete/aria.js",
         "toast.js",
         "styles.js",
+        "constants.js",
         "types.js"
       ],
       "matches": ["<all_urls>"]

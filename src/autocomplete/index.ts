@@ -1,3 +1,4 @@
+import { BLUR_HIDE_DELAY_MS, DEFAULT_TRIGGER } from "../constants.js";
 import type { EditorTarget, TokenContext } from "../types.js";
 import { injectStyles } from "../styles.js";
 import { getTokenBeforeCaret, replaceToken } from "../text.js";
@@ -35,7 +36,7 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
   };
 
   function getTrigger(): string {
-    return cb.getSettings().trigger || "@";
+    return cb.getSettings().trigger || DEFAULT_TRIGGER;
   }
 
   function isCaseSensitive(): boolean {
@@ -119,7 +120,7 @@ export function createAutocomplete(cb: AutocompleteCallbacks): AutocompleteContr
     state.blurTimer = setTimeout(() => {
       if (state.popup && document.activeElement && state.popup.contains(document.activeElement)) return;
       hidePopupInternal();
-    }, 150);
+    }, BLUR_HIDE_DELAY_MS);
   }
 
   function hidePopupOnScrollOrResize(e: Event): void {
