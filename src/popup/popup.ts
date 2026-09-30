@@ -74,7 +74,7 @@ function cycleTheme(): void {
   const idx = order.indexOf(current);
   const next = order[(idx + 1) % order.length];
   settings = { ...settings, theme: next };
-  void saveSettings(settings);
+  saveSettings(settings).catch((e) => console.error("[@-Mapper] could not save theme", e));
   applyThemeToDoc(next);
 }
 
@@ -82,22 +82,13 @@ function truncateHost(host: string): string {
   return host.length > 28 ? `${host.slice(0, 25)}…` : host;
 }
 
-function getCurrentTabHostname(): Promise<string> {
-  return new Promise((resolve) => {
-    b.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs[0];
-      const url = tab?.url;
-      if (!url) {
-        resolve("");
-        return;
-      }
-      try {
-        resolve(new URL(url).hostname || "");
-      } catch {
-        resolve("");
-      }
-    });
-  });
+async function getCurrentTabHostname(): Promise<string> {
+  try {
+    const [tab] = await b.tabs.query({ active: true, currentWindow: true });
+    return tab?.url ? new URL(tab.url).hostname : "";
+  } catch {
+    return "";
+  }
 }
 
 function getFilteredEntries(): [string, string][] {
@@ -189,7 +180,7 @@ function createDisplayRow(key: string, value: string): HTMLLIElement {
   });
   deleteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    void deleteMapping(key);
+    run(deleteMapping(key));
   });
 
   actions.append(editBtn, deleteBtn);
@@ -262,7 +253,7 @@ function createEditRow(key: string, value: string): HTMLLIElement {
   row.append(keyField, arrow, valField, actions);
   li.appendChild(row);
 
-  saveBtn.addEventListener("click", () => void fields.save());
+  saveBtn.addEventListener("click", () => run(fields.save()));
   cancelBtn.addEventListener("click", fields.cancel);
 
   requestAnimationFrame(() => fields.focus());
@@ -368,6 +359,14 @@ function showStatus(text: string, isError: boolean): void {
   }, 2000);
 }
 
+/** Run a fire-and-forget task from an event handler, surfacing failures in the status line. */
+function run(task: Promise<unknown>): void {
+  task.catch((e: unknown) => {
+    console.error("[@-Mapper] action failed", e);
+    showStatus(e instanceof Error ? e.message : "Something went wrong", true);
+  });
+}
+
 async function handleToggle(): Promise<void> {
   if (!hostname) return;
   const currentlyEnabled = isSiteEnabled(settings ?? DEFAULT_SETTINGS, siteOverrides, hostname);
@@ -388,15 +387,20 @@ async function handleExport(): Promise<void> {
 
 async function handleImport(file: File | null): Promise<void> {
   if (!file) return;
-  const result = await importFromFile(file, "merge");
-  if (result.ok) {
-    showStatus(`Imported ${result.imported?.mappings ?? 0} mappings.`, false);
-    mappings = await loadMappings();
-    renderMappings();
-  } else {
-    showStatus(result.error ?? "Import failed", true);
+  try {
+    const result = await importFromFile(file, "merge");
+    if (result.ok) {
+      showStatus(`Imported ${result.imported?.mappings ?? 0} mappings.`, false);
+      mappings = await loadMappings();
+      renderMappings();
+    } else {
+      showStatus(result.error ?? "Import failed", true);
+    }
+  } catch (e) {
+    showStatus(e instanceof Error ? e.message : "Import failed", true);
+  } finally {
+    importFile.value = "";
   }
-  importFile.value = "";
 }
 
 function openOptions(): void {
@@ -434,8 +438,8 @@ async function init(): Promise<void> {
   renderToggle();
   renderMappings();
 
-  siteToggleInput.addEventListener("change", () => void handleToggle());
-  addBtn.addEventListener("click", () => void addMapping());
+  siteToggleInput.addEventListener("change", () => run(handleToggle()));
+  addBtn.addEventListener("click", () => run(addMapping()));
   themeToggle.addEventListener("click", cycleTheme);
   newKey.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -446,7 +450,7 @@ async function init(): Promise<void> {
   newVal.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      void addMapping();
+      run(addMapping());
     }
   });
   const clearAddError = () => {
@@ -458,9 +462,9 @@ async function init(): Promise<void> {
   searchInput.addEventListener("input", renderMappings);
   exportBtn.addEventListener("click", handleExport);
   importBtn.addEventListener("click", () => importFile.click());
-  importFile.addEventListener("change", () => void handleImport(importFile.files?.[0] ?? null));
+  importFile.addEventListener("change", () => run(handleImport(importFile.files?.[0] ?? null)));
   optionsBtn.addEventListener("click", openOptions);
-  undoBtn.addEventListener("click", () => void undoDelete());
+  undoBtn.addEventListener("click", () => run(undoDelete()));
 
   onStorageChanged((changes) => {
     if (changes.mappings !== undefined) mappings = changes.mappings;
@@ -478,5 +482,5 @@ async function init(): Promise<void> {
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {
-  void init();
+  init().catch((e) => console.error("[@-Mapper] popup init failed", e));
 }

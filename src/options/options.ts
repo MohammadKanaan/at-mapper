@@ -391,9 +391,9 @@ function bindSites() {
     els.siteInput.value = "";
     renderSites();
   };
-  els.addSite.addEventListener("click", add);
+  els.addSite.addEventListener("click", () => run(add()));
   els.siteInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") add();
+    if (e.key === "Enter") run(add());
   });
   els.sitesList.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
@@ -406,10 +406,10 @@ function bindSites() {
       const next = { ...siteOverrides };
       delete next[host];
       siteOverrides = next;
-      saveSiteOverrides(siteOverrides).then(renderSites);
+      run(saveSiteOverrides(siteOverrides).then(renderSites));
     } else if (btn.dataset.action === "toggle") {
       siteOverrides = { ...siteOverrides, [host]: !siteOverrides[host] };
-      saveSiteOverrides(siteOverrides).then(renderSites);
+      run(saveSiteOverrides(siteOverrides).then(renderSites));
     }
   });
 }
@@ -433,7 +433,7 @@ function bindMappings() {
     els.mappingVal.value = "";
     renderMappings();
   };
-  els.addMapping.addEventListener("click", add);
+  els.addMapping.addEventListener("click", () => run(add()));
   const clearMappingError = () => {
     els.mappingKey.removeAttribute("aria-invalid");
     els.mappingKeyError.textContent = "";
@@ -444,7 +444,7 @@ function bindMappings() {
     if (e.key === "Enter") els.mappingVal.focus();
   });
   els.mappingVal.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") add();
+    if (e.key === "Enter") run(add());
   });
   els.mappingsList.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
@@ -469,10 +469,12 @@ function deleteMapping(key: string) {
   mappings = next;
   deletedMapping = { key, val };
   if (editingKey === key) stopEdit();
-  saveMappings(mappings).then(() => {
-    renderMappings();
-    showUndoToast();
-  });
+  run(
+    saveMappings(mappings).then(() => {
+      renderMappings();
+      showUndoToast();
+    }),
+  );
 }
 
 function showUndoToast() {
@@ -486,7 +488,7 @@ function showUndoToast() {
     if (!deletedMapping) return;
     mappings = { ...mappings, [deletedMapping.key]: deletedMapping.val };
     deletedMapping = null;
-    saveMappings(mappings).then(renderMappings);
+    run(saveMappings(mappings).then(renderMappings));
     undoToast?.hide();
   });
   els.undoToast.append(msg, undoBtn);
@@ -495,7 +497,11 @@ function showUndoToast() {
 }
 
 function bindData() {
-  els.exportBtn.addEventListener("click", () => exportToFile());
+  els.exportBtn.addEventListener("click", () => {
+    exportToFile().catch((e: unknown) =>
+      showImportResult(e instanceof Error ? e.message : "Export failed.", false),
+    );
+  });
   els.importFile.addEventListener("change", () => {
     const file = els.importFile.files?.[0];
     els.importFileName.textContent = file ? file.name : "Choose file";
@@ -504,7 +510,13 @@ function bindData() {
     const file = els.importFile.files?.[0];
     if (!file) return;
     const mode = getSelectedImportMode();
-    const result = await importFromFile(file, mode);
+    let result: Awaited<ReturnType<typeof importFromFile>>;
+    try {
+      result = await importFromFile(file, mode);
+    } catch (e) {
+      showImportResult(e instanceof Error ? e.message : "Import failed.", false);
+      return;
+    }
     if (result.ok) {
       showImportResult(
         `Imported ${result.imported?.mappings ?? 0} mappings and ${result.imported?.siteOverrides ?? 0} site overrides.`,
@@ -579,6 +591,17 @@ function bindTabs() {
   }
 }
 
+function showSaveError(error: unknown): void {
+  console.error("[@-Mapper] save failed", error);
+  els.saveStatus.textContent = "Could not save";
+  els.saveStatus.classList.add("visible");
+}
+
+/** Run a fire-and-forget task from an event handler, surfacing failures to the user. */
+function run(task: Promise<unknown>): void {
+  task.catch(showSaveError);
+}
+
 function flashSaved() {
   els.saveStatus.textContent = "Saved ✓";
   els.saveStatus.classList.add("visible");
@@ -597,7 +620,7 @@ function debounceSave(fn: () => Promise<void>): () => void {
   return () => {
     window.clearTimeout(timer);
     timer = window.setTimeout(() => {
-      void fn();
+      fn().catch(showSaveError);
     }, 250);
   };
 }
@@ -615,5 +638,5 @@ function normalizeHostname(value: string): string {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  void init();
+  init().catch((e) => console.error("[@-Mapper] options init failed", e));
 });
