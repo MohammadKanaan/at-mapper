@@ -1,7 +1,8 @@
+import { FALLBACK_POPUP_WIDTH_PX } from "../constants.js";
 import type { EditorTarget, TokenContext } from "../types.js";
 import { POPUP_ID, POPUP_GAP, POPUP_MAX_HEIGHT } from "../styles.js";
 import { getCaretCoords } from "../caret.js";
-import type { AutocompleteState, PopupItem } from "./items.js";
+import type { AutocompleteState, PopupHandlers, PopupItem } from "./items.js";
 import { renderItems } from "./items.js";
 
 export function clampPopupLeft(
@@ -26,20 +27,22 @@ export function placePopup(
   } else {
     state.popup.style.top = `${below}px`;
   }
-  const popupWidth = state.popup.getBoundingClientRect().width || 220;
+  const popupWidth = state.popup.getBoundingClientRect().width || FALLBACK_POPUP_WIDTH_PX;
   state.popup.style.left = `${clampPopupLeft(coords.left, window.innerWidth, popupWidth, POPUP_GAP)}px`;
+}
+
+export interface ShowPopupOptions {
+  target: EditorTarget;
+  token: TokenContext;
+  trigger: string;
+  matches: [string, string][];
+  hasExisting: boolean;
 }
 
 export function showPopup(
   state: AutocompleteState,
-  target: EditorTarget,
-  token: TokenContext,
-  trigger: string,
-  matches: [string, string][],
-  hasExisting: boolean,
-  onApply: (key: string, val: string) => void,
-  onSelect: (i: number) => void,
-  onActivateAdd: (word: string, el: HTMLElement) => void,
+  { target, token, trigger, matches, hasExisting }: ShowPopupOptions,
+  handlers: PopupHandlers,
 ): void {
   hidePopup(state);
   if (matches.length === 0 && !token.word) return;
@@ -60,7 +63,7 @@ export function showPopup(
   popup.setAttribute("role", "listbox");
   popup.setAttribute("aria-label", "Matching shortcuts");
 
-  renderItems(popup, items, state.selectedIdx, trigger, onApply, onSelect, onActivateAdd);
+  renderItems(popup, items, state.selectedIdx, trigger, handlers);
 
   document.body.appendChild(popup);
   state.popup = popup;

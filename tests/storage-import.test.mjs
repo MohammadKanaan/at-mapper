@@ -69,7 +69,6 @@ test("loadSettings merges partial saved settings with defaults", async () => {
   mockStorage._store["atm_settings"] = { trigger: "/" };
   // Clear the sync key
   const syncStore = mockStorage._store;
-  const original = { ...syncStore };
   // Directly set partial data in the store
   syncStore["atm_settings"] = { trigger: "/" };
   const loaded = await storage.loadSettings();
@@ -181,6 +180,24 @@ test("applyImport rejects payload with invalid mappings", async () => {
   const result = await storage.applyImport({ version: 1, mappings: "oops" }, "merge");
   assert.equal(result.ok, false);
   assert.match(result.error, /mappings/i);
+});
+
+test("applyImport rejects non-string mapping values without writing anything", async () => {
+  mockStorage._store["atm_mappings"] = { keep: "me" };
+  const result = await storage.applyImport({ version: 1, mappings: { a: 42 } }, "replace");
+  assert.equal(result.ok, false);
+  assert.match(result.error, /mappings/i);
+  assert.deepEqual(await storage.loadMappings(), { keep: "me" });
+});
+
+test("applyImport rejects malformed settings and siteOverrides", async () => {
+  const badSettings = await storage.applyImport({ version: 1, mappings: {}, settings: [] }, "merge");
+  assert.equal(badSettings.ok, false);
+  const badOverrides = await storage.applyImport(
+    { version: 1, mappings: {}, siteOverrides: { "example.com": "yes" } },
+    "merge",
+  );
+  assert.equal(badOverrides.ok, false);
 });
 
 test("applyImport handles missing settings/siteOverrides gracefully", async () => {

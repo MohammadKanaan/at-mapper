@@ -6,16 +6,6 @@ import type { EditorTarget, EditorKind } from "./types.js";
 // selection access. YouTube/Google search inputs are type="text"/"search".
 const TEXT_INPUT_TYPES = new Set(["text", "search", "url", "tel", ""]);
 
-function isOurUI(el: Element): boolean {
-  if (el.id.startsWith("atm-")) return true;
-  if (el instanceof HTMLElement) {
-    for (const c of el.classList) {
-      if (c.startsWith("atm-")) return true;
-    }
-  }
-  return false;
-}
-
 function isContentEditable(el: HTMLElement): boolean {
   const ce = el.getAttribute("contenteditable");
   if (ce === "" || ce === "true") return true;
@@ -39,32 +29,20 @@ function kindOf(el: HTMLElement): EditorKind | null {
   return null;
 }
 
+const EDITOR_SELECTOR = 'textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"], input';
+const OWN_UI_SELECTOR = "[class*='atm-'], [id^='atm-']";
+
 export function findEditors(root: ParentNode = document.body): EditorTarget[] {
   const found: EditorTarget[] = [];
-  const seen = new Set<Element>();
-
-  const candidates: Element[] = [];
-  candidates.push(...root.querySelectorAll("textarea"));
-  candidates.push(...root.querySelectorAll('[contenteditable=""]'));
-  candidates.push(...root.querySelectorAll('[contenteditable="true"]'));
-  candidates.push(...root.querySelectorAll('[role="textbox"]'));
-  candidates.push(...root.querySelectorAll("input"));
-
-  for (const cand of candidates) {
+  for (const cand of root.querySelectorAll(EDITOR_SELECTOR)) {
     if (!(cand instanceof HTMLElement)) continue;
-    if (seen.has(cand)) continue;
-    if (isOurUI(cand)) continue;
-    if (cand.closest("[class*='atm-']") || cand.closest("[id^='atm-']")) continue;
+    if (cand.closest(OWN_UI_SELECTOR)) continue;
     if (!isVisible(cand)) continue;
     const kind = kindOf(cand);
-    if (!kind) continue;
-    seen.add(cand);
-    found.push({ el: cand, kind });
+    if (kind) found.push({ el: cand, kind });
   }
-
   return found;
 }
-
 
 export function observeEditors(onChange: (targets: EditorTarget[]) => void): () => void {
   let scheduled = false;

@@ -32,14 +32,13 @@ const autocomplete = createAutocomplete({
   addMapping: setMapping,
 });
 
-function syncEditors(): void {
+function syncEditors(targets: EditorTarget[] = findEditors()): void {
   if (!active) return;
-  const targets = findEditors();
   const next = new Set(targets.map((t) => t.el));
 
-  for (const [el] of attached) {
+  for (const [el, target] of attached) {
     if (!next.has(el)) {
-      autocomplete.detach(attached.get(el)!);
+      autocomplete.detach(target);
       attached.delete(el);
     }
   }
@@ -54,7 +53,7 @@ function syncEditors(): void {
 function activate(): void {
   if (active) return;
   active = true;
-  detachObserver = observeEditors(syncEditors);
+  detachObserver = observeEditors((targets) => syncEditors(targets));
   syncEditors();
 }
 
@@ -63,8 +62,8 @@ function deactivate(): void {
   active = false;
   detachObserver();
   detachObserver = () => {};
-  for (const [el] of attached) {
-    autocomplete.detach(attached.get(el)!);
+  for (const target of attached.values()) {
+    autocomplete.detach(target);
   }
   attached.clear();
   autocomplete.hidePopup();

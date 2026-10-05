@@ -4,7 +4,6 @@ import assert from "node:assert/strict";
 import { stripAt } from "../dist/shared/text.js";
 import {
   filterAndSortMappings,
-  getMappingEmptyMessage,
   getNewMappingError,
   formatMappingShortcut,
   validateMappingKey,

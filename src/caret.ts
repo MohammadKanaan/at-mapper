@@ -1,3 +1,4 @@
+import { FALLBACK_LINE_HEIGHT_PX } from "./constants.js";
 import type { EditorKind, CaretCoords } from "./types.js";
 
 const CARET_MIRROR_PROPS = [
@@ -38,24 +39,23 @@ function buildMirror(src: HTMLTextAreaElement | HTMLInputElement, position: numb
   } finally {
     if (div.parentNode) div.parentNode.removeChild(div);
   }
-  const lh = parseFloat(style.lineHeight) || 18;
+  const lh = parseFloat(style.lineHeight) || FALLBACK_LINE_HEIGHT_PX;
   return { coords, lh };
 }
 
-function getCaretCoordsTextarea(textarea: HTMLTextAreaElement, position: number): CaretCoords {
-  const { coords, lh } = buildMirror(textarea, position, true);
-  return { left: coords.left, top: coords.top, bottom: coords.top + lh, height: lh };
-}
-
-function getCaretCoordsInput(input: HTMLInputElement, position: number): CaretCoords {
-  const { coords, lh } = buildMirror(input, position, false);
+function getCaretCoordsText(
+  el: HTMLTextAreaElement | HTMLInputElement,
+  position: number,
+  wrap: boolean,
+): CaretCoords {
+  const { coords, lh } = buildMirror(el, position, wrap);
   return { left: coords.left, top: coords.top, bottom: coords.top + lh, height: lh };
 }
 
 function getCaretCoordsContenteditable(el: HTMLElement): CaretCoords {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) {
-    return { left: 0, top: 0, bottom: 0, height: 18 };
+    return { left: 0, top: 0, bottom: 0, height: FALLBACK_LINE_HEIGHT_PX };
   }
   const range = sel.getRangeAt(0).cloneRange();
   const rects = range.getClientRects();
@@ -89,31 +89,18 @@ function getCaretCoordsContenteditable(el: HTMLElement): CaretCoords {
 
   if (!rect) {
     const r = el.getBoundingClientRect();
-    return { left: r.left, top: r.top, bottom: r.bottom, height: r.height || 18 };
+    return { left: r.left, top: r.top, bottom: r.bottom, height: r.height || FALLBACK_LINE_HEIGHT_PX };
   }
-  const height = rect.height || 18;
+  const height = rect.height || FALLBACK_LINE_HEIGHT_PX;
   return { left: rect.left, top: rect.top, bottom: rect.top + height, height };
 }
 
 export function getCaretCoords(el: HTMLElement, kind: EditorKind, pos: number): CaretCoords {
   if (kind === "textarea") {
-    return getCaretCoordsTextarea(el as HTMLTextAreaElement, pos);
+    return getCaretCoordsText(el as HTMLTextAreaElement, pos, true);
   }
   if (kind === "input") {
-    return getCaretCoordsInput(el as HTMLInputElement, pos);
+    return getCaretCoordsText(el as HTMLInputElement, pos, false);
   }
   return getCaretCoordsContenteditable(el);
-}
-
-export function getCaretPos(el: HTMLElement, kind: EditorKind): number {
-  if (kind === "textarea" || kind === "input") {
-    return (el as HTMLTextAreaElement | HTMLInputElement).selectionStart ?? 0;
-  }
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return 0;
-  const range = sel.getRangeAt(0);
-  const pre = document.createRange();
-  pre.selectNodeContents(el);
-  pre.setEnd(range.endContainer, range.endOffset);
-  return pre.toString().length;
 }

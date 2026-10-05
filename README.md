@@ -12,7 +12,7 @@
 
 ## Requirements
 
-- Bun, and Node.js 18+ (the test runner uses `node --test`)
+- Bun, and Node.js 20.19+ (the test runner uses `node --test`)
 - A Chromium-based browser (Chrome, Edge, Brave, etc.) or Firefox 121+
 
 ## Install and build
@@ -31,10 +31,16 @@ For local development:
 ```bash
 bun run watch      # Recompile TypeScript on changes
 bun run typecheck  # Check types without writing dist/
+bun run lint       # ESLint over src/, scripts/ and tests/
+bun run format     # Format with Prettier
 bun run test       # Build, then run the Node test suite
+bun run build:firefox  # Build with the Firefox manifest variant
 ```
 
 Run `bun run build` after changing static assets or the manifest.
+
+Modules imported (directly or transitively) by `content.js` must also be listed in
+`web_accessible_resources` in `manifest.json`; the test suite fails if one is missing.
 
 ## Load the extension
 

@@ -35,46 +35,6 @@ function makeInput(value, selectionStart) {
   };
 }
 
-// For replaceToken on textarea/input, we need the native value setter path.
-// Mock HTMLTextAreaElement/HTMLInputElement prototypes so setNativeValue works.
-function setupNativeProtoMocks() {
-  const taProto = {
-    value: {
-      set(v) { this._value = v; },
-      get() { return this._value; },
-    },
-  };
-  const inputProto = {
-    value: {
-      set(v) { this._value = v; },
-      get() { return this._value; },
-    },
-  };
-  globalThis.HTMLTextAreaElement = { prototype: taProto };
-  globalThis.HTMLInputElement = { prototype: inputProto };
-  globalThis.InputEvent = class InputEvent {
-    constructor(type, opts) {
-      this.type = type;
-      this.bubbles = opts?.bubbles ?? false;
-      this.data = opts?.data ?? null;
-      this.inputType = opts?.inputType ?? "";
-    }
-  };
-  // We need Object.getOwnPropertyDescriptor to return our mock setter
-  const origGetOPD = Object.getOwnPropertyDescriptor;
-  Object.getOwnPropertyDescriptor = (obj, prop) => {
-    if (obj === taProto && prop === "value") return { set: taProto.value.set };
-    if (obj === inputProto && prop === "value") return { set: inputProto.value.set };
-    return origGetOPD(obj, prop);
-  };
-  return () => {
-    Object.getOwnPropertyDescriptor = origGetOPD;
-    delete globalThis.HTMLTextAreaElement;
-    delete globalThis.HTMLInputElement;
-    delete globalThis.InputEvent;
-  };
-}
-
 // ── Tests ───────────────────────────────────────────────────────
 
 const { getTokenBeforeCaret } = await import("../dist/text.js");

@@ -1,14 +1,16 @@
-import type { EditorTarget } from "../types.js";
 import type { AutocompleteState } from "./items.js";
+
+export interface KeyboardActions {
+  setSelected: (idx: number) => void;
+  applyMapping: (val: string) => void;
+  hidePopup: () => void;
+  activateAddForm: (word: string, el: HTMLElement) => void;
+}
 
 export function onKeyDown(
   state: AutocompleteState,
-  target: EditorTarget,
   e: KeyboardEvent,
-  setSelected: (idx: number) => void,
-  applyMapping: (key: string, val: string) => void,
-  hidePopup: () => void,
-  activateAddForm: (word: string, el: HTMLElement) => void,
+  { setSelected, applyMapping, hidePopup, activateAddForm }: KeyboardActions,
 ): void {
   if (!state.popup) return;
   if (state.composing) return;
@@ -24,7 +26,7 @@ export function onKeyDown(
     e.preventDefault();
     e.stopPropagation();
     if (item.type === "mapping") {
-      applyMapping(item.key, item.val);
+      applyMapping(item.val);
     } else {
       const addRowEl = items[state.selectedIdx] as HTMLElement;
       activateAddForm(item.word, addRowEl);

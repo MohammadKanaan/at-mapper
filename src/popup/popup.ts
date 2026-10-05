@@ -1,3 +1,4 @@
+import { TOAST_DURATION_MS } from "../constants.js";
 import { b } from "../browser.js";
 import { isSiteEnabled } from "../host.js";
 import {
@@ -22,28 +23,29 @@ import {
   getNewMappingError,
 } from "../shared/mappings.js";
 import { makeUndoToast, type UndoToast } from "../shared/undo-toast.js";
+import { requireElement } from "../shared/dom.js";
 import { createUiButton } from "../ui/index.js";
 
-const hostBadge = document.getElementById("hostBadge") as HTMLSpanElement;
-const siteToggleInput = document.getElementById("siteToggleInput") as HTMLInputElement;
-const siteToggleLabel = document.getElementById("siteToggleLabel") as HTMLSpanElement;
-const siteStatus = document.getElementById("siteStatus") as HTMLSpanElement;
-const newKey = document.getElementById("newKey") as HTMLInputElement;
-const newVal = document.getElementById("newVal") as HTMLInputElement;
-const addBtn = document.getElementById("addBtn") as HTMLButtonElement;
-const searchInput = document.getElementById("searchInput") as HTMLInputElement;
-const mappingCount = document.getElementById("mappingCount") as HTMLSpanElement;
-const mappingsList = document.getElementById("mappingsList") as HTMLUListElement;
-const emptyState = document.getElementById("emptyState") as HTMLDivElement;
-const exportBtn = document.getElementById("exportBtn") as HTMLButtonElement;
-const importBtn = document.getElementById("importBtn") as HTMLButtonElement;
-const importFile = document.getElementById("importFile") as HTMLInputElement;
-const optionsBtn = document.getElementById("optionsBtn") as HTMLButtonElement;
-const statusMsg = document.getElementById("statusMsg") as HTMLDivElement;
-const undoToast = document.getElementById("undoToast") as HTMLDivElement;
-const undoText = document.getElementById("undoText") as HTMLSpanElement;
-const undoBtn = document.getElementById("undoBtn") as HTMLButtonElement;
-const themeToggle = document.getElementById("themeToggle") as HTMLButtonElement;
+const hostBadge = requireElement("hostBadge", HTMLSpanElement);
+const siteToggleInput = requireElement("siteToggleInput", HTMLInputElement);
+const siteToggleLabel = requireElement("siteToggleLabel", HTMLSpanElement);
+const siteStatus = requireElement("siteStatus", HTMLSpanElement);
+const newKey = requireElement("newKey", HTMLInputElement);
+const newVal = requireElement("newVal", HTMLInputElement);
+const addBtn = requireElement("addBtn", HTMLButtonElement);
+const searchInput = requireElement("searchInput", HTMLInputElement);
+const mappingCount = requireElement("mappingCount", HTMLSpanElement);
+const mappingsList = requireElement("mappingsList", HTMLUListElement);
+const emptyState = requireElement("emptyState", HTMLDivElement);
+const exportBtn = requireElement("exportBtn", HTMLButtonElement);
+const importBtn = requireElement("importBtn", HTMLButtonElement);
+const importFile = requireElement("importFile", HTMLInputElement);
+const optionsBtn = requireElement("optionsBtn", HTMLButtonElement);
+const statusMsg = requireElement("statusMsg", HTMLDivElement);
+const undoToast = requireElement("undoToast", HTMLDivElement);
+const undoText = requireElement("undoText", HTMLSpanElement);
+const undoBtn = requireElement("undoBtn", HTMLButtonElement);
+const themeToggle = requireElement("themeToggle", HTMLButtonElement);
 
 let settings: Settings | null = null;
 let siteOverrides: SiteOverrides = {};
@@ -73,7 +75,7 @@ function cycleTheme(): void {
   const idx = order.indexOf(current);
   const next = order[(idx + 1) % order.length];
   settings = { ...settings, theme: next };
-  void saveSettings(settings);
+  saveSettings(settings).catch((e) => console.error("[@-Mapper] could not save theme", e));
   applyThemeToDoc(next);
 }
 
@@ -81,22 +83,13 @@ function truncateHost(host: string): string {
   return host.length > 28 ? `${host.slice(0, 25)}…` : host;
 }
 
-function getCurrentTabHostname(): Promise<string> {
-  return new Promise((resolve) => {
-    b.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs[0];
-      const url = tab?.url;
-      if (!url) {
-        resolve("");
-        return;
-      }
-      try {
-        resolve(new URL(url).hostname || "");
-      } catch {
-        resolve("");
-      }
-    });
-  });
+async function getCurrentTabHostname(): Promise<string> {
+  try {
+    const [tab] = await b.tabs.query({ active: true, currentWindow: true });
+    return tab?.url ? new URL(tab.url).hostname : "";
+  } catch {
+    return "";
+  }
 }
 
 function getFilteredEntries(): [string, string][] {
@@ -188,7 +181,7 @@ function createDisplayRow(key: string, value: string): HTMLLIElement {
   });
   deleteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    void deleteMapping(key);
+    run(deleteMapping(key));
   });
 
   actions.append(editBtn, deleteBtn);
@@ -261,7 +254,7 @@ function createEditRow(key: string, value: string): HTMLLIElement {
   row.append(keyField, arrow, valField, actions);
   li.appendChild(row);
 
-  saveBtn.addEventListener("click", () => void fields.save());
+  saveBtn.addEventListener("click", () => run(fields.save()));
   cancelBtn.addEventListener("click", fields.cancel);
 
   requestAnimationFrame(() => fields.focus());
@@ -367,6 +360,14 @@ function showStatus(text: string, isError: boolean): void {
   }, 2000);
 }
 
+/** Run a fire-and-forget task from an event handler, surfacing failures in the status line. */
+function run(task: Promise<unknown>): void {
+  task.catch((e: unknown) => {
+    console.error("[@-Mapper] action failed", e);
+    showStatus(e instanceof Error ? e.message : "Something went wrong", true);
+  });
+}
+
 async function handleToggle(): Promise<void> {
   if (!hostname) return;
   const currentlyEnabled = isSiteEnabled(settings ?? DEFAULT_SETTINGS, siteOverrides, hostname);
@@ -387,15 +388,20 @@ async function handleExport(): Promise<void> {
 
 async function handleImport(file: File | null): Promise<void> {
   if (!file) return;
-  const result = await importFromFile(file, "merge");
-  if (result.ok) {
-    showStatus(`Imported ${result.imported?.mappings ?? 0} mappings.`, false);
-    mappings = await loadMappings();
-    renderMappings();
-  } else {
-    showStatus(result.error ?? "Import failed", true);
+  try {
+    const result = await importFromFile(file, "merge");
+    if (result.ok) {
+      showStatus(`Imported ${result.imported?.mappings ?? 0} mappings.`, false);
+      mappings = await loadMappings();
+      renderMappings();
+    } else {
+      showStatus(result.error ?? "Import failed", true);
+    }
+  } catch (e) {
+    showStatus(e instanceof Error ? e.message : "Import failed", true);
+  } finally {
+    importFile.value = "";
   }
-  importFile.value = "";
 }
 
 function openOptions(): void {
@@ -425,7 +431,7 @@ async function init(): Promise<void> {
   undoToastCtrl = makeUndoToast({
     toastEl: undoToast,
     visibleClass: "toast--visible",
-    durationMs: 4000,
+    durationMs: TOAST_DURATION_MS,
     onExpire: () => {
       lastDeleted = null;
     },
@@ -433,8 +439,8 @@ async function init(): Promise<void> {
   renderToggle();
   renderMappings();
 
-  siteToggleInput.addEventListener("change", () => void handleToggle());
-  addBtn.addEventListener("click", () => void addMapping());
+  siteToggleInput.addEventListener("change", () => run(handleToggle()));
+  addBtn.addEventListener("click", () => run(addMapping()));
   themeToggle.addEventListener("click", cycleTheme);
   newKey.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -445,7 +451,7 @@ async function init(): Promise<void> {
   newVal.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      void addMapping();
+      run(addMapping());
     }
   });
   const clearAddError = () => {
@@ -457,9 +463,9 @@ async function init(): Promise<void> {
   searchInput.addEventListener("input", renderMappings);
   exportBtn.addEventListener("click", handleExport);
   importBtn.addEventListener("click", () => importFile.click());
-  importFile.addEventListener("change", () => void handleImport(importFile.files?.[0] ?? null));
+  importFile.addEventListener("change", () => run(handleImport(importFile.files?.[0] ?? null)));
   optionsBtn.addEventListener("click", openOptions);
-  undoBtn.addEventListener("click", () => void undoDelete());
+  undoBtn.addEventListener("click", () => run(undoDelete()));
 
   onStorageChanged((changes) => {
     if (changes.mappings !== undefined) mappings = changes.mappings;
@@ -477,5 +483,5 @@ async function init(): Promise<void> {
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {
-  void init();
+  init().catch((e) => console.error("[@-Mapper] popup init failed", e));
 }

@@ -4,6 +4,12 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** Matches a trigger followed by a run of non-whitespace, non-trigger characters at end of text. */
+function tokenRegex(trigger: string): RegExp {
+  const t = escapeRegExp(trigger);
+  return new RegExp(t + "([^\\s" + t + "]+)$");
+}
+
 function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement, value: string): void {
   // React overrides the value setter on controlled inputs; setting .value
   // directly via assignment is intercepted by React's tracker in dev and
@@ -62,13 +68,7 @@ function getTextBeforeCaretContenteditable(el: HTMLElement): string {
 }
 
 function findDomPoint(el: HTMLElement, charOffset: number): { node: Node; offset: number } | null {
-  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      const parent = node.parentNode;
-      if (!parent) return NodeFilter.FILTER_REJECT;
-      return NodeFilter.FILTER_ACCEPT;
-    },
-  });
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
   let acc = 0;
   let n: Node | null;
   while ((n = walker.nextNode())) {
@@ -93,8 +93,7 @@ export function getTokenBeforeCaret(el: HTMLElement, kind: EditorKind, trigger: 
     before = getTextBeforeCaretContenteditable(el);
     caretPos = before.length;
   }
-  const re = new RegExp(escapeRegExp(trigger) + "([^\\s" + escapeRegExp(trigger) + "]+)$");
-  const m = before.match(re);
+  const m = before.match(tokenRegex(trigger));
   if (!m) return null;
   const word = m[1];
   const start = caretPos - m[0].length;
@@ -108,8 +107,7 @@ export function replaceToken(el: HTMLElement, kind: EditorKind, token: TokenCont
     const pos = ta.selectionStart ?? 0;
     const before = ta.value.slice(0, pos);
     const after = ta.value.slice(pos);
-    const re = new RegExp(escapeRegExp(token.trigger) + "([^\\s" + escapeRegExp(token.trigger) + "]+)$");
-    const m = before.match(re);
+    const m = before.match(tokenRegex(token.trigger));
     if (!m) return false;
     const tokenStart = pos - m[0].length;
     const newValue = ta.value.slice(0, tokenStart) + replacement + after;
