@@ -1,4 +1,4 @@
-import { TOAST_DURATION_MS } from "../constants.js";
+import { APP_NAME, TOAST_DURATION_MS } from "../constants.js";
 import { b } from "../browser.js";
 import { isSiteEnabled } from "../host.js";
 import {
@@ -46,6 +46,7 @@ const undoToast = requireElement("undoToast", HTMLDivElement);
 const undoText = requireElement("undoText", HTMLSpanElement);
 const undoBtn = requireElement("undoBtn", HTMLButtonElement);
 const themeToggle = requireElement("themeToggle", HTMLButtonElement);
+const appTitle = requireElement("appTitle", HTMLHeadingElement);
 
 let settings: Settings | null = null;
 let siteOverrides: SiteOverrides = {};
@@ -77,6 +78,13 @@ function cycleTheme(): void {
   settings = { ...settings, theme: next };
   saveSettings(settings).catch((e) => console.error("[@mapper] could not save theme", e));
   applyThemeToDoc(next);
+}
+
+/** The heading is the product name written as one of the user's own shortcuts. */
+function renderTitle(): void {
+  const label = mappingShortcut(APP_NAME);
+  appTitle.textContent = label;
+  document.title = label;
 }
 
 function truncateHost(host: string): string {
@@ -424,6 +432,7 @@ async function initData(): Promise<void> {
 async function init(): Promise<void> {
   await initData();
   applyThemeToDoc(settings?.theme ?? systemTheme());
+  renderTitle();
   undoToastCtrl = makeUndoToast({
     toastEl: undoToast,
     visibleClass: "toast--visible",
@@ -469,6 +478,7 @@ async function init(): Promise<void> {
     if (changes.settings !== undefined) {
       settings = changes.settings;
       applyThemeToDoc(settings.theme);
+      renderTitle();
       newKey.placeholder = mappingShortcut("word");
     }
     renderToggle();

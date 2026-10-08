@@ -1,4 +1,5 @@
 import { b } from "../browser.js";
+import { APP_NAME } from "../constants.js";
 
 import {
   loadMappings,
@@ -24,6 +25,7 @@ import { applyTheme, systemTheme } from "../shared/theme.js";
 import {
   filterAndSortMappings,
   createEditFields,
+  formatMappingShortcut,
   getMappingEmptyMessage,
   getNewMappingError,
 } from "../shared/mappings.js";
@@ -58,6 +60,7 @@ const els = {
   importBtn: getEl("import-btn"),
   importResult: getEl("import-result"),
   version: getEl("version"),
+  appTitle: getEl("app-title"),
   themeSelect: getEl("theme-select") as HTMLSelectElement,
 };
 
@@ -156,11 +159,18 @@ function renderAll() {
   renderMappings();
 }
 
+function renderTitle(): void {
+  const label = `${formatMappingShortcut(settings.trigger, APP_NAME)} Settings`;
+  els.appTitle.textContent = label;
+  document.title = label;
+}
+
 function renderGeneral() {
   els.globalEnabled.checked = settings.globalEnabledByDefault;
   els.trigger.value = settings.trigger;
   els.caseSensitive.checked = settings.caseSensitive;
   els.themeSelect.value = settings.theme;
+  renderTitle();
   validateTrigger();
 }
 
@@ -360,6 +370,7 @@ function bindGeneral() {
   els.trigger.addEventListener("input", () => {
     if (!validateTrigger()) return;
     settings.trigger = els.trigger.value;
+    renderTitle();
     save();
     renderMappings();
   });

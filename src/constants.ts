@@ -3,6 +3,12 @@
 /** Trigger character used when the user has not configured one. */
 export const DEFAULT_TRIGGER = "@";
 
+/**
+ * Product name. Always shown suffixed to the user's trigger character, so the
+ * popup heading reads `@mapper` by default and `/mapper` for a `/` trigger.
+ */
+export const APP_NAME = "mapper";
+
 /** Delay before hiding the popup on blur, so clicks inside it still register. */
 export const BLUR_HIDE_DELAY_MS = 150;
 
