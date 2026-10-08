@@ -14,7 +14,7 @@ import {
 } from "../storage.js";
 import { DEFAULT_SETTINGS, type Mappings, type Settings, type SiteOverrides, type Theme } from "../types.js";
 import { stripAt } from "../shared/text.js";
-import { applyTheme, themeLabel, themeName } from "../shared/theme.js";
+import { applyTheme, nextTheme, systemTheme, themeLabel, themeName } from "../shared/theme.js";
 import {
   filterAndSortMappings,
   createEditFields,
@@ -54,26 +54,26 @@ let hostname = "";
 let statusTimeout: number | null = null;
 let lastDeleted: { key: string; value: string } | null = null;
 let editingKey: string | null = null;
-let systemDarkQuery: MediaQueryList | null = null;
 let undoToastCtrl: UndoToast | null = null;
 
+// Paint the system guess before the stored setting has loaded, so the popup
+// does not open in the wrong theme for a frame.
+applyThemeToDoc(systemTheme());
+
 function applyThemeToDoc(theme: Theme): void {
-  const resolved = applyTheme(document, theme, systemDarkQuery);
-  updateThemeToggle(theme, resolved);
+  applyTheme(document, theme);
+  updateThemeToggle(theme);
 }
 
-function updateThemeToggle(theme: Theme, resolved: "light" | "dark"): void {
+function updateThemeToggle(theme: Theme): void {
   themeToggle.textContent = themeName(theme);
-  themeToggle.title = themeLabel(theme, resolved);
-  themeToggle.setAttribute("aria-label", themeLabel(theme, resolved));
+  themeToggle.title = themeLabel(theme);
+  themeToggle.setAttribute("aria-label", themeLabel(theme));
 }
 
 function cycleTheme(): void {
   if (!settings) return;
-  const order: Theme[] = ["auto", "light", "dark"];
-  const current = settings.theme;
-  const idx = order.indexOf(current);
-  const next = order[(idx + 1) % order.length];
+  const next = nextTheme(settings.theme);
   settings = { ...settings, theme: next };
   saveSettings(settings).catch((e) => console.error("[@-Mapper] could not save theme", e));
   applyThemeToDoc(next);
@@ -423,11 +423,7 @@ async function initData(): Promise<void> {
 
 async function init(): Promise<void> {
   await initData();
-  systemDarkQuery = window.matchMedia("(prefers-color-scheme: dark)");
-  applyThemeToDoc(settings?.theme ?? DEFAULT_SETTINGS.theme);
-  systemDarkQuery.addEventListener("change", () => {
-    if (settings) applyThemeToDoc(settings.theme);
-  });
+  applyThemeToDoc(settings?.theme ?? systemTheme());
   undoToastCtrl = makeUndoToast({
     toastEl: undoToast,
     visibleClass: "toast--visible",

@@ -47,6 +47,7 @@
         "toast.js",
         "styles.js",
         "constants.js",
+        "shared/theme.js",
         "types.js"
       ],
       "matches": ["<all_urls>"]

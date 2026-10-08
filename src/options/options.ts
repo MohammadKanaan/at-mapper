@@ -20,7 +20,7 @@ import {
   type Theme,
 } from "../types.js";
 import { stripAt } from "../shared/text.js";
-import { applyTheme } from "../shared/theme.js";
+import { applyTheme, systemTheme } from "../shared/theme.js";
 import {
   filterAndSortMappings,
   createEditFields,
@@ -67,11 +67,13 @@ let mappings: Mappings = {};
 let saveTimer: number | undefined;
 let deletedMapping: { key: string; val: string } | null = null;
 let editingKey: string | null = null;
-let systemDarkQuery: MediaQueryList | null = null;
 let undoToast: UndoToast | null = null;
 
+// Paint the system guess before the stored setting has loaded.
+applyThemeToDoc(systemTheme());
+
 function applyThemeToDoc(theme: Theme): void {
-  applyTheme(document, theme, systemDarkQuery);
+  applyTheme(document, theme);
 }
 
 function getEl(id: string): HTMLElement {
@@ -119,9 +121,7 @@ async function init() {
       deletedMapping = null;
     },
   });
-  systemDarkQuery = window.matchMedia("(prefers-color-scheme: dark)");
   applyThemeToDoc(settings.theme);
-  systemDarkQuery.addEventListener("change", () => applyThemeToDoc(settings.theme));
   renderAll();
   bindGeneral();
   bindSites();

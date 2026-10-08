@@ -54,7 +54,7 @@ test("loadSettings returns defaults when nothing stored", async () => {
   assert.equal(s.trigger, "@");
   assert.equal(s.caseSensitive, false);
   assert.equal(s.globalEnabledByDefault, true);
-  assert.equal(s.theme, "auto");
+  assert.equal(s.theme, "light");
 });
 
 test("saveSettings then loadSettings round-trips", async () => {
@@ -75,7 +75,25 @@ test("loadSettings merges partial saved settings with defaults", async () => {
   assert.equal(loaded.trigger, "/");
   assert.equal(loaded.caseSensitive, false); // default
   assert.equal(loaded.globalEnabledByDefault, true); // default
-  assert.equal(loaded.theme, "auto"); // default
+  assert.equal(loaded.theme, "light"); // system guess (no matchMedia in node)
+});
+
+test("loadSettings replaces a legacy \"auto\" theme with the system guess", async () => {
+  mockStorage._store["atm_settings"] = { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "auto" };
+  const loaded = await storage.loadSettings();
+  assert.equal(loaded.theme, "light");
+});
+
+test("loadSettings keeps an explicitly chosen theme", async () => {
+  mockStorage._store["atm_settings"] = { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "dark" };
+  const loaded = await storage.loadSettings();
+  assert.equal(loaded.theme, "dark");
+});
+
+test("loadSettings ignores an unrecognised theme", async () => {
+  mockStorage._store["atm_settings"] = { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "solarized" };
+  const loaded = await storage.loadSettings();
+  assert.equal(loaded.theme, "light");
 });
 
 test("loadSiteOverrides returns empty when nothing stored", async () => {
@@ -109,7 +127,7 @@ test("applyImport merge mode merges mappings", async () => {
   const payload = {
     version: 1,
     mappings: { new_key: "new_val" },
-    settings: { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "auto" },
+    settings: { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "light" },
     siteOverrides: {},
   };
   const result = await storage.applyImport(payload, "merge");
@@ -126,7 +144,7 @@ test("applyImport merge mode overwrites same key with imported value", async () 
   const payload = {
     version: 1,
     mappings: { shared: "updated" },
-    settings: { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "auto" },
+    settings: { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "light" },
     siteOverrides: {},
   };
   const result = await storage.applyImport(payload, "merge");
@@ -206,12 +224,34 @@ test("applyImport handles missing settings/siteOverrides gracefully", async () =
   assert.equal(result.ok, true);
 });
 
+test("applyImport coerces a legacy \"auto\" theme in an export", async () => {
+  for (const k of Object.keys(mockStorage._store)) delete mockStorage._store[k];
+
+  const payload = {
+    version: 1,
+    mappings: {},
+    settings: { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "auto" },
+    siteOverrides: {},
+  };
+  await storage.applyImport(payload, "replace");
+  assert.equal((await storage.loadSettings()).theme, "light");
+
+  payload.settings.theme = "dark";
+  await storage.applyImport(payload, "merge");
+  assert.equal((await storage.loadSettings()).theme, "dark");
+
+  // An export with no theme at all must not clobber the current choice.
+  delete payload.settings.theme;
+  await storage.applyImport(payload, "merge");
+  assert.equal((await storage.loadSettings()).theme, "dark");
+});
+
 test("applyImport reports imported counts", async () => {
   for (const k of Object.keys(mockStorage._store)) delete mockStorage._store[k];
   const payload = {
     version: 1,
     mappings: { a: "1", b: "2", c: "3" },
-    settings: { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "auto" },
+    settings: { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "light" },
     siteOverrides: { "x.com": true, "y.com": false },
   };
   const result = await storage.applyImport(payload, "merge");

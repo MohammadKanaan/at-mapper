@@ -8,7 +8,7 @@ import {
   formatMappingShortcut,
   validateMappingKey,
 } from "../dist/shared/mappings.js";
-import { resolveTheme, themeName, themeLabel } from "../dist/shared/theme.js";
+import { systemTheme, nextTheme, themeName, themeLabel } from "../dist/shared/theme.js";
 import { isSiteEnabled } from "../dist/host.js";
 import { hasMapping, matchingMappings } from "../dist/autocomplete/items.js";
 
@@ -96,32 +96,40 @@ test("validateMappingKey rejects collision with existing key", () => {
 
 // ── shared/theme.ts ─────────────────────────────────────────────
 
-test("resolveTheme returns literal for light/dark", () => {
-  assert.equal(resolveTheme("light", null), "light");
-  assert.equal(resolveTheme("dark", null), "dark");
+test("systemTheme reports light when there is no matchMedia", () => {
+  assert.equal(systemTheme(), "light");
 });
 
-test("resolveTheme defers to MediaQueryList for auto", () => {
-  assert.equal(resolveTheme("auto", { matches: true }), "dark");
-  assert.equal(resolveTheme("auto", { matches: false }), "light");
-  assert.equal(resolveTheme("auto", null), "light");
+test("systemTheme follows the system preference", () => {
+  const original = globalThis.matchMedia;
+  globalThis.matchMedia = () => ({ matches: true });
+  assert.equal(systemTheme(), "dark");
+  globalThis.matchMedia = () => ({ matches: false });
+  assert.equal(systemTheme(), "light");
+  if (original === undefined) delete globalThis.matchMedia;
+  else globalThis.matchMedia = original;
+  assert.equal(systemTheme(), "light");
+});
+
+test("nextTheme flips between the two themes", () => {
+  assert.equal(nextTheme("light"), "dark");
+  assert.equal(nextTheme("dark"), "light");
 });
 
 test("themeName returns display names", () => {
   assert.equal(themeName("light"), "Light");
   assert.equal(themeName("dark"), "Dark");
-  assert.equal(themeName("auto"), "System");
 });
 
-test("themeLabel includes current state", () => {
-  assert.equal(themeLabel("auto", "dark"), "System theme, currently dark. Change theme");
-  assert.equal(themeLabel("light", "light"), "Light theme, currently light. Change theme");
+test("themeLabel names the theme and the one it switches to", () => {
+  assert.equal(themeLabel("light"), "Light theme — switch to dark");
+  assert.equal(themeLabel("dark"), "Dark theme — switch to light");
 });
 
 // ── host.ts — isSiteEnabled ─────────────────────────────────────
 
 test("isSiteEnabled returns global default when no override exists", () => {
-  const s = { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "auto" };
+  const s = { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "light" };
   assert.equal(isSiteEnabled(s, {}, "example.com"), true);
 
   const s2 = { ...s, globalEnabledByDefault: false };
@@ -129,13 +137,13 @@ test("isSiteEnabled returns global default when no override exists", () => {
 });
 
 test("isSiteEnabled respects per-site override", () => {
-  const s = { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "auto" };
+  const s = { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "light" };
   assert.equal(isSiteEnabled(s, { "example.com": false }, "example.com"), false);
   assert.equal(isSiteEnabled(s, { "example.com": true }, "example.com"), true);
 });
 
 test("isSiteEnabled returns global default when hostname is empty", () => {
-  const s = { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "auto" };
+  const s = { trigger: "@", caseSensitive: false, globalEnabledByDefault: true, theme: "light" };
   assert.equal(isSiteEnabled(s, {}, ""), true);
 
   const s2 = { ...s, globalEnabledByDefault: false };
@@ -143,7 +151,7 @@ test("isSiteEnabled returns global default when hostname is empty", () => {
 });
 
 test("isSiteEnabled returns global default for unoverridden host", () => {
-  const s = { trigger: "@", caseSensitive: false, globalEnabledByDefault: false, theme: "auto" };
+  const s = { trigger: "@", caseSensitive: false, globalEnabledByDefault: false, theme: "light" };
   assert.equal(isSiteEnabled(s, { "other.com": true }, "example.com"), false);
 });
 

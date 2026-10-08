@@ -1,4 +1,5 @@
 import type { Theme } from "./types.js";
+import { systemTheme } from "./shared/theme.js";
 
 export const STYLE_ID = "atm-styles";
 export const THEME_STYLE_ID = "atm-styles-theme";
@@ -199,21 +200,11 @@ export function injectStyles(): void {
 
 export function applyContentTheme(theme: Theme): void {
   const html = document.documentElement;
+  const resolved: Theme = theme === "dark" || theme === "light" ? theme : systemTheme();
 
-  if (theme === "auto") {
-    html.removeAttribute("data-atm-theme");
-    removeThemeStyle();
-    return;
-  }
-
-  if (theme === "light") {
-    html.setAttribute("data-atm-theme", "light");
-    removeThemeStyle();
-    return;
-  }
-
-  html.setAttribute("data-atm-theme", "dark");
-  injectDarkOverride();
+  html.setAttribute("data-atm-theme", resolved);
+  if (resolved === "dark") injectDarkOverride();
+  else removeThemeStyle();
 }
 
 function injectDarkOverride(): void {

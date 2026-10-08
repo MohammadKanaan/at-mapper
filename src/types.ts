@@ -1,6 +1,6 @@
 export type Mappings = Record<string, string>;
 
-export type Theme = "light" | "dark" | "auto";
+export type Theme = "light" | "dark";
 
 export interface Settings {
   trigger: string;
@@ -15,7 +15,11 @@ export const DEFAULT_SETTINGS: Settings = {
   trigger: "@",
   caseSensitive: false,
   globalEnabledByDefault: true,
-  theme: "auto",
+  /**
+   * Placeholder theme. The first run adopts the system preference instead
+   * (see `concreteTheme()` in storage.ts); a stored choice always wins.
+   */
+  theme: "light",
 };
 
 export const STORAGE_KEYS = {

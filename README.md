@@ -79,7 +79,7 @@ Exports are JSON files with mappings, settings, and hostname overrides:
     "trigger": "@",
     "caseSensitive": false,
     "globalEnabledByDefault": true,
-    "theme": "auto"
+    "theme": "light"
   },
   "siteOverrides": { "example.com": false }
 }

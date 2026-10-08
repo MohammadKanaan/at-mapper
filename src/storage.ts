@@ -1,4 +1,5 @@
 import { b } from "./browser.js";
+import { systemTheme } from "./shared/theme.js";
 import {
   DEFAULT_SETTINGS,
   EXPORT_VERSION,
@@ -9,6 +10,7 @@ import {
   type Settings,
   type SiteOverrides,
   STORAGE_KEYS,
+  type Theme,
 } from "./types.js";
 
 export async function loadMappings(): Promise<Mappings> {
@@ -21,10 +23,21 @@ export async function saveMappings(m: Mappings): Promise<void> {
   await b.storage.local.set({ [STORAGE_KEYS.mappings]: m });
 }
 
+/**
+ * Themes are always concrete. A stored or exported "auto" (or anything else
+ * unrecognised, including a missing value) becomes the system preference.
+ */
+function concreteTheme(value: unknown): Theme {
+  return value === "light" || value === "dark" ? value : systemTheme();
+}
+
 export async function loadSettings(): Promise<Settings> {
   const { [STORAGE_KEYS.settings]: raw } = await b.storage.sync.get(STORAGE_KEYS.settings);
-  if (raw && typeof raw === "object") return { ...DEFAULT_SETTINGS, ...(raw as Partial<Settings>) };
-  return { ...DEFAULT_SETTINGS };
+  if (raw && typeof raw === "object") {
+    const partial = raw as Partial<Settings>;
+    return { ...DEFAULT_SETTINGS, ...partial, theme: concreteTheme(partial.theme) };
+  }
+  return { ...DEFAULT_SETTINGS, theme: systemTheme() };
 }
 
 export async function saveSettings(s: Settings): Promise<void> {
@@ -101,11 +114,12 @@ export async function applyImport(payload: ExportPayload, mode: ImportMode): Pro
   try {
     if (mode === "replace") {
       await saveMappings(payload.mappings);
-      await saveSettings({ ...DEFAULT_SETTINGS, ...importedSettings });
+      await saveSettings({ ...DEFAULT_SETTINGS, ...importedSettings, theme: concreteTheme(importedSettings.theme) });
       await saveSiteOverrides(importedOverrides);
     } else {
       await saveMappings({ ...(await loadMappings()), ...payload.mappings });
-      await saveSettings({ ...(await loadSettings()), ...importedSettings });
+      const merged = { ...(await loadSettings()), ...importedSettings };
+      await saveSettings({ ...merged, theme: concreteTheme(importedSettings.theme ?? merged.theme) });
       await saveSiteOverrides({ ...(await loadSiteOverrides()), ...importedOverrides });
     }
     return {
