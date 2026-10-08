@@ -1,6 +1,6 @@
-# @-Mapper
+# @mapper
 
-@-Mapper is a cross-browser WebExtension that expands shortcuts such as `@word` into saved text from an autocomplete menu. It supports text inputs, textareas, and contenteditable editors on regular web pages.
+@mapper is a cross-browser WebExtension that expands shortcuts such as `@word` into saved text from an autocomplete menu. It supports text inputs, textareas, and contenteditable editors on regular web pages.
 
 ## Features
 

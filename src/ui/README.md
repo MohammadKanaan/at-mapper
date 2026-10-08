@@ -1,6 +1,6 @@
 # Portable UI layer
 
-This directory contains the framework-free visual primitives used by @-Mapper. It has no browser-extension, storage, or application-state dependencies and can be copied directly into another browser project.
+This directory contains the framework-free visual primitives used by @mapper. It has no browser-extension, storage, or application-state dependencies and can be copied directly into another browser project.
 
 ## Use it
 

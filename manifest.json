@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "@-Mapper",
+  "name": "@mapper",
   "version": "1.0.0",
   "description": "Convert \"@word\" into a configured replacement via an autocomplete dropdown, on any website. Manage mappings, toggle per-site, and export/import.",
 
@@ -62,7 +62,7 @@
       "48": "icons/icon-48.png",
       "128": "icons/icon-128.png"
     },
-    "default_title": "@-Mapper"
+    "default_title": "@mapper"
   },
 
   "options_ui": {

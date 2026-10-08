@@ -12,7 +12,7 @@ import { showToast } from "./toast.js";
 import { applyContentTheme } from "./styles.js";
 import type { EditorTarget, Mappings, Settings, SiteOverrides } from "./types.js";
 
-const SCRIPT_NAME = "@-Mapper";
+const SCRIPT_NAME = "@mapper";
 
 let mappings: Mappings = {};
 let settings: Settings;

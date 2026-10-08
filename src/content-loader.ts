@@ -6,4 +6,4 @@
 // may execute in a realm where the main-world `chrome` is visible instead.
 (globalThis as unknown as { __atm_chrome?: typeof chrome }).__atm_chrome = chrome;
 const url = chrome.runtime.getURL("content.js");
-import(url).catch((e) => console.error("[@-Mapper] failed to load content module", e));
+import(url).catch((e) => console.error("[@mapper] failed to load content module", e));

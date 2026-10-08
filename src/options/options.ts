@@ -592,7 +592,7 @@ function bindTabs() {
 }
 
 function showSaveError(error: unknown): void {
-  console.error("[@-Mapper] save failed", error);
+  console.error("[@mapper] save failed", error);
   els.saveStatus.textContent = "Could not save";
   els.saveStatus.classList.add("visible");
 }
@@ -638,5 +638,5 @@ function normalizeHostname(value: string): string {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  init().catch((e) => console.error("[@-Mapper] options init failed", e));
+  init().catch((e) => console.error("[@mapper] options init failed", e));
 });

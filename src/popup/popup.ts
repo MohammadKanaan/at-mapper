@@ -75,7 +75,7 @@ function cycleTheme(): void {
   if (!settings) return;
   const next = nextTheme(settings.theme);
   settings = { ...settings, theme: next };
-  saveSettings(settings).catch((e) => console.error("[@-Mapper] could not save theme", e));
+  saveSettings(settings).catch((e) => console.error("[@mapper] could not save theme", e));
   applyThemeToDoc(next);
 }
 
@@ -363,7 +363,7 @@ function showStatus(text: string, isError: boolean): void {
 /** Run a fire-and-forget task from an event handler, surfacing failures in the status line. */
 function run(task: Promise<unknown>): void {
   task.catch((e: unknown) => {
-    console.error("[@-Mapper] action failed", e);
+    console.error("[@mapper] action failed", e);
     showStatus(e instanceof Error ? e.message : "Something went wrong", true);
   });
 }
@@ -479,5 +479,5 @@ async function init(): Promise<void> {
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {
-  init().catch((e) => console.error("[@-Mapper] popup init failed", e));
+  init().catch((e) => console.error("[@mapper] popup init failed", e));
 }
