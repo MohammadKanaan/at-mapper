@@ -26,12 +26,6 @@ body {
 
 .title {
   margin: 0;
-  /*
-   * The wordmark is a shortcut, so its two halves are shaded like one: the
-   * trigger keeps the accent (below), and the word that follows it takes the
-   * next step along the accent ramp — deeper on light, lighter on dark.
-   */
-  color: var(--ui-color-accent-hover);
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -43,12 +37,20 @@ body {
 }
 
 /*
- * The trigger is its own element rather than a ::first-letter rule: the
+ * The wordmark is a shortcut, so its two halves are shaded like one: the
+ * trigger keeps the accent, and the word that follows it takes the next step
+ * along the accent ramp — deeper on light, lighter on dark.
+ *
+ * The trigger is its own element rather than a ::first-letter rule, because the
  * pseudo-element also swallows leading punctuation *and the letter after it*,
  * which painted the `m` of `@mapper` in the trigger's colour.
  */
 .title__trigger {
   color: var(--ui-color-accent);
+}
+
+.title__word {
+  color: var(--ui-color-accent-hover);
 }
 
 /* A worked example of the product, sitting next to its own name. */

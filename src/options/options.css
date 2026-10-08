@@ -23,8 +23,16 @@ body {
   line-height: 1.15;
 }
 
-.page-header h1::first-letter {
+/*
+ * Same two-tone wordmark as the popup: the trigger keeps the accent, the word
+ * takes the next step along the accent ramp. "Settings" stays in heading colour.
+ */
+.page-header h1 .title__trigger {
   color: var(--ui-color-accent);
+}
+
+.page-header h1 .title__word {
+  color: var(--ui-color-accent-hover);
 }
 
 .page-header p {

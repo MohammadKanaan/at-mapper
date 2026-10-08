@@ -25,7 +25,6 @@ import { applyTheme, systemTheme } from "../shared/theme.js";
 import {
   filterAndSortMappings,
   createEditFields,
-  formatMappingShortcut,
   getMappingEmptyMessage,
   getNewMappingError,
 } from "../shared/mappings.js";
@@ -61,6 +60,8 @@ const els = {
   importResult: getEl("import-result"),
   version: getEl("version"),
   appTitle: getEl("app-title"),
+  appTrigger: getEl("app-trigger"),
+  appWord: getEl("app-word"),
   themeSelect: getEl("theme-select") as HTMLSelectElement,
 };
 
@@ -160,9 +161,10 @@ function renderAll() {
 }
 
 function renderTitle(): void {
-  const label = `${formatMappingShortcut(settings.trigger, APP_NAME)} Settings`;
-  els.appTitle.textContent = label;
-  document.title = label;
+  els.appTrigger.textContent = settings.trigger;
+  els.appWord.textContent = APP_NAME;
+  // The heading already spells out the full title, suffix included.
+  document.title = els.appTitle.textContent ?? "";
 }
 
 function renderGeneral() {
