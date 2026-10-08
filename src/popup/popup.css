@@ -42,7 +42,12 @@ body {
   white-space: nowrap;
 }
 
-.title::first-letter {
+/*
+ * The trigger is its own element rather than a ::first-letter rule: the
+ * pseudo-element also swallows leading punctuation *and the letter after it*,
+ * which painted the `m` of `@mapper` in the trigger's colour.
+ */
+.title__trigger {
   color: var(--ui-color-accent);
 }
 

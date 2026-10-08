@@ -47,6 +47,7 @@ const undoText = requireElement("undoText", HTMLSpanElement);
 const undoBtn = requireElement("undoBtn", HTMLButtonElement);
 const themeToggle = requireElement("themeToggle", HTMLButtonElement);
 const appTitle = requireElement("appTitle", HTMLSpanElement);
+const appTrigger = requireElement("appTrigger", HTMLSpanElement);
 
 let settings: Settings | null = null;
 let siteOverrides: SiteOverrides = {};
@@ -82,9 +83,9 @@ function cycleTheme(): void {
 
 /** The heading is the product name written as one of the user's own shortcuts. */
 function renderTitle(): void {
-  const label = mappingShortcut(APP_NAME);
-  appTitle.textContent = label;
-  document.title = label;
+  appTrigger.textContent = settings?.trigger ?? DEFAULT_SETTINGS.trigger;
+  appTitle.textContent = APP_NAME;
+  document.title = mappingShortcut(APP_NAME);
 }
 
 function truncateHost(host: string): string {
