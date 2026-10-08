@@ -1,5 +1,18 @@
 @import "../ui/styles/index.css";
 
+/*
+ * Keep the vertical scrollbar's track reserved at all times. Panels differ in
+ * height, so switching to a scrollable tab (Sites, Mappings) would otherwise
+ * pop in a scrollbar and narrow the centered container — a horizontal UI shift.
+ *
+ * `scrollbar-gutter: stable` is the more modern tool, but it reserves nothing
+ * on this page because `::-webkit-scrollbar` is styled in foundation.css.
+ * Forcing the track is the reliable fix.
+ */
+html {
+  overflow-y: scroll;
+}
+
 body {
   min-height: 100vh;
   padding: clamp(24px, 6vw, 64px) clamp(16px, 4vw, 40px);
