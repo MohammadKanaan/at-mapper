@@ -1,6 +1,6 @@
 /**
  * Generate deterministic extension icons without runtime dependencies.
- * The mark uses the same warm amber as the UI and a deliberately simple,
+ * The mark uses the same blue as the UI and a deliberately simple,
  * high-contrast @ glyph that remains legible at toolbar size.
  */
 import { deflateSync } from "node:zlib";
@@ -10,9 +10,9 @@ import { fileURLToPath } from "node:url";
 
 const ICONS_DIR = resolve(fileURLToPath(import.meta.url), "..", "..", "icons");
 const SIZES = [16, 32, 48, 128];
-const AMBER = [180, 84, 20, 255];
-const AMBER_DARK = [145, 64, 13, 255];
-const CREAM = [255, 249, 242, 255];
+const ACCENT = [26, 86, 196, 255];
+const ACCENT_DARK = [19, 63, 150, 255];
+const ON_ACCENT = [255, 255, 255, 255];
 
 mkdirSync(ICONS_DIR, { recursive: true });
 
@@ -135,8 +135,8 @@ function makeIcon(size) {
       const index = (y * size + x) * 4;
       const tileCoverage = coverage(x, y, size, insideRoundedSquare);
       const glyphCoverage = coverage(x, y, size, insideGlyph);
-      const base = y > size * 0.72 ? mix(AMBER, AMBER_DARK, 0.12) : AMBER;
-      const color = mix(base, CREAM, glyphCoverage);
+      const base = y > size * 0.72 ? mix(ACCENT, ACCENT_DARK, 0.12) : ACCENT;
+      const color = mix(base, ON_ACCENT, glyphCoverage);
       rgba[index] = color[0];
       rgba[index + 1] = color[1];
       rgba[index + 2] = color[2];

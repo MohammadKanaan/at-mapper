@@ -226,7 +226,7 @@
   height: 20px;
   background: var(--ui-color-surface-raised);
   border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(43, 37, 32, 0.28);
+  box-shadow: 0 1px 4px rgba(18, 28, 45, 0.28);
   transition: transform var(--ui-motion-slow) var(--ui-motion-ease-out);
 }
 

@@ -21,19 +21,19 @@ export const POPUP_ID = "atm-popup";
 
 const DARK_CSS = `
   .atm-popup {
-    --ui-color-surface: #28231f;
-    --ui-color-surface-raised: #302a25;
-    --ui-color-text: #f3ebe2;
-    --ui-color-text-muted: #b8aa9c;
-    --ui-color-border: #4b423a;
-    --ui-color-accent: #ee9c55;
-    --ui-color-accent-soft: #4a3020;
+    --ui-color-surface: #191f27;
+    --ui-color-surface-raised: #212832;
+    --ui-color-text: #e9eef5;
+    --ui-color-text-muted: #97a4b3;
+    --ui-color-border: #2d3644;
+    --ui-color-accent: #6ea8fe;
+    --ui-color-accent-soft: #1d2b45;
     box-shadow: 0 16px 42px rgba(0, 0, 0, 0.38);
   }
   .atm-toast {
-    --ui-color-surface: #302a25;
-    --ui-color-text: #f3ebe2;
-    --ui-color-border: #65584d;
+    --ui-color-surface: #212832;
+    --ui-color-text: #e9eef5;
+    --ui-color-border: #414c5c;
   }
 `;
 
@@ -43,13 +43,13 @@ export function injectStyles(): void {
   style.id = STYLE_ID;
   style.textContent = `
     .atm-popup {
-      --ui-color-surface: var(--atm-background, #fffaf4);
-      --ui-color-surface-raised: var(--atm-surface, #fffdf9);
-      --ui-color-text: var(--atm-foreground, #2b2520);
-      --ui-color-text-muted: var(--atm-muted, #6d6257);
-      --ui-color-border: var(--atm-border, #ddd1c3);
-      --ui-color-accent: var(--atm-accent, #b45414);
-      --ui-color-accent-soft: var(--atm-accent-soft, #f8e5d5);
+      --ui-color-surface: var(--atm-background, #f7f9fc);
+      --ui-color-surface-raised: var(--atm-surface, #ffffff);
+      --ui-color-text: var(--atm-foreground, #131a22);
+      --ui-color-text-muted: var(--atm-muted, #5a6673);
+      --ui-color-border: var(--atm-border, #d2dae4);
+      --ui-color-accent: var(--atm-accent, #1a56c4);
+      --ui-color-accent-soft: var(--atm-accent-soft, #dfe8fb);
       position: fixed;
       z-index: ${Z.popup};
       box-sizing: border-box;
@@ -62,7 +62,7 @@ export function injectStyles(): void {
       background: ${CSS_VARS.bg};
       border: 1px solid ${CSS_VARS.border};
       border-radius: 12px;
-      box-shadow: 0 16px 42px rgba(58, 40, 24, 0.2);
+      box-shadow: 0 16px 42px rgba(18, 28, 45, 0.2);
       font-family: "Avenir Next", Avenir, "Segoe UI Variable", "Segoe UI", Helvetica, sans-serif;
       font-size: 13px;
       line-height: 1.4;
@@ -151,9 +151,9 @@ export function injectStyles(): void {
     }
 
     .atm-toast {
-      --ui-color-surface: var(--atm-background, #2b2520);
-      --ui-color-text: var(--atm-foreground, #fffaf4);
-      --ui-color-border: var(--atm-border, #4b423a);
+      --ui-color-surface: var(--atm-background, #191f27);
+      --ui-color-text: var(--atm-foreground, #e9eef5);
+      --ui-color-border: var(--atm-border, #2d3644);
       position: fixed;
       right: 16px;
       bottom: 16px;
@@ -164,7 +164,7 @@ export function injectStyles(): void {
       background: var(--ui-color-surface);
       border: 1px solid var(--ui-color-border);
       border-radius: 10px;
-      box-shadow: 0 12px 32px rgba(43, 37, 32, 0.24);
+      box-shadow: 0 12px 32px rgba(18, 28, 45, 0.24);
       opacity: 0;
       pointer-events: none;
       transform: translateY(8px);

@@ -81,7 +81,7 @@ body {
 .tab.active {
   color: var(--ui-color-text);
   background: var(--ui-color-surface-raised);
-  box-shadow: 0 1px 3px rgba(58, 40, 24, 0.12);
+  box-shadow: 0 1px 3px rgba(18, 28, 45, 0.12);
 }
 
 .tab:focus-visible,
