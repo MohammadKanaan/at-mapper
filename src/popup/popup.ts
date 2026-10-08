@@ -46,7 +46,7 @@ const undoToast = requireElement("undoToast", HTMLDivElement);
 const undoText = requireElement("undoText", HTMLSpanElement);
 const undoBtn = requireElement("undoBtn", HTMLButtonElement);
 const themeToggle = requireElement("themeToggle", HTMLButtonElement);
-const appTitle = requireElement("appTitle", HTMLHeadingElement);
+const appTitle = requireElement("appTitle", HTMLSpanElement);
 
 let settings: Settings | null = null;
 let siteOverrides: SiteOverrides = {};

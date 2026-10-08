@@ -29,10 +29,23 @@ body {
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  /* The example is part of the wordmark: let the host badge truncate instead. */
+  flex: 0 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .title::first-letter {
   color: var(--ui-color-accent);
+}
+
+/* A worked example of the product, sitting next to its own name. */
+.title__example {
+  color: var(--ui-color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .header-actions {
