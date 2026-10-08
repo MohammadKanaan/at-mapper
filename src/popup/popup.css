@@ -26,6 +26,12 @@ body {
 
 .title {
   margin: 0;
+  /*
+   * The wordmark is a shortcut, so its two halves are shaded like one: the
+   * trigger keeps the accent (below), and the word that follows it takes the
+   * next step along the accent ramp — deeper on light, lighter on dark.
+   */
+  color: var(--ui-color-accent-hover);
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;

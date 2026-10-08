@@ -1,0 +1,3 @@
+base = "main"
+# With an empty list, tasks reach @review marked gate:none.
+verify = ["bun test"]
