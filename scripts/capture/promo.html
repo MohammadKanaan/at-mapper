@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" data-size="small">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@mapper promo tile</title>
+    <script>
+      document.documentElement.dataset.size =
+        new URLSearchParams(location.search).get("size") || "small";
+    </script>
+    <style>
+      :root {
+        --canvas: #e8ecf2;
+        --ink: #131a22;
+        --muted: #5a6673;
+        --accent: #1a56c4;
+        --accent-strong: #133f96;
+        --accent-soft: #dfe8fb;
+        --font-sans: "Avenir Next", Avenir, "Segoe UI Variable", "Segoe UI", Helvetica, sans-serif;
+        --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+      * { box-sizing: border-box; }
+      html,
+      body { margin: 0; height: 100%; overflow: hidden; }
+      body {
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      .tile { width: 100%; height: 100%; }
+      .brand { display: flex; align-items: center; }
+      .mark {
+        display: grid;
+        place-items: center;
+        font-weight: 750;
+        line-height: 1;
+      }
+      .word { font-weight: 750; letter-spacing: -0.03em; line-height: 1; }
+      .example {
+        display: flex;
+        align-items: baseline;
+        font-family: var(--font-mono);
+      }
+
+      /* ── 440 × 280 small tile, flat accent field ──────────── */
+      [data-size="small"] body { color: #ffffff; background: var(--accent); }
+      [data-size="small"] .tile {
+        padding: 30px 32px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      [data-size="small"] .brand { gap: 10px; margin-bottom: 20px; }
+      [data-size="small"] .mark {
+        width: 34px;
+        height: 34px;
+        background: #ffffff;
+        color: var(--accent);
+        border-radius: 10px;
+        font-size: 21px;
+      }
+      [data-size="small"] .word { font-size: 31px; color: #ffffff; }
+      [data-size="small"] .tagline {
+        margin: 0;
+        max-width: 320px;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.4;
+        color: var(--accent-soft);
+      }
+      [data-size="small"] .example { margin-top: 18px; gap: 8px; font-size: 14px; }
+      [data-size="small"] .example .key { color: #ffffff; font-weight: 700; }
+      [data-size="small"] .example .sep { color: var(--accent-soft); }
+      [data-size="small"] .example .val { color: #ffffff; }
+      [data-size="small"] .headline,
+      [data-size="small"] .lede,
+      [data-size="small"] .visual { display: none; }
+
+      /* ── 1400 × 560 marquee, flat canvas and accent mat ───── */
+      [data-size="marquee"] body { color: var(--ink); background: var(--canvas); }
+      [data-size="marquee"] .tile {
+        padding: 0 96px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 400px;
+        align-items: center;
+        gap: 80px;
+      }
+      [data-size="marquee"] .brand { gap: 13px; margin-bottom: 32px; }
+      [data-size="marquee"] .mark {
+        width: 46px;
+        height: 46px;
+        background: var(--accent);
+        color: #ffffff;
+        border-radius: 13px;
+        font-size: 28px;
+      }
+      [data-size="marquee"] .word { font-size: 27px; color: var(--accent-strong); }
+      [data-size="marquee"] .headline {
+        margin: 0;
+        font-size: 56px;
+        font-weight: 750;
+        line-height: 1.04;
+        letter-spacing: -0.04em;
+      }
+      [data-size="marquee"] .lede {
+        margin: 20px 0 0;
+        max-width: 560px;
+        font-size: 20px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+      [data-size="marquee"] .example { display: none; }
+      [data-size="marquee"] .tagline { display: none; }
+      [data-size="marquee"] .visual {
+        position: relative;
+        width: 400px;
+        height: 512px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      [data-size="marquee"] .mat { position: absolute; inset: 0; background: var(--accent); border-radius: 26px; }
+      [data-size="marquee"] .visual .popup {
+        position: relative;
+        display: block;
+        width: 324px;
+        border-radius: 14px;
+        box-shadow: 0 24px 48px rgba(18, 28, 45, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tile">
+      <div class="copy">
+        <div class="brand">
+          <span class="mark" aria-hidden="true">@</span>
+          <span class="word">mapper</span>
+        </div>
+        <h1 class="headline">Manage your shortcuts<br />on the go.</h1>
+        <p class="tagline">Turn @word into saved text, anywhere you type.</p>
+        <p class="lede">Add, edit, search, or delete mappings. Turn @mapper on or off per site, and export or import when you switch browsers.</p>
+        <p class="example"><span class="key">@sig</span><span class="sep">→</span><span class="val">Best regards, Alex</span></p>
+      </div>
+      <div class="visual">
+        <div class="mat"></div>
+        <img class="popup" src="/popup.png" alt="The @mapper popup" />
+      </div>
+    </div>
+  </body>
+</html>

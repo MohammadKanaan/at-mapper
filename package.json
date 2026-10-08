@@ -18,6 +18,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
+    "make-store": "node scripts/capture-store-assets.mjs",
     "watch": "tsc --watch"
   },
   "devDependencies": {
