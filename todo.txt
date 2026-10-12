@@ -1,0 +1,3 @@
+x 2026-10-08 2026-10-08 create marketing material for this to be submitted to the store. screenshots in a live chrome instance.
+x 2026-10-08 2026-10-08 fix the setting page's UI shift when switching to a tab that has scrollable content.
+x 2026-10-08 2026-10-08 check for any steps left to publish to chrome webstore

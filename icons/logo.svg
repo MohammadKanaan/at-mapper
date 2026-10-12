@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- At-sign adapted from Lucide, https://lucide.dev/icons/at-sign.
+       ISC/MIT attribution is included in LICENSE.txt. -->
+  <rect x="5" y="5" width="118" height="118" rx="28" fill="#1a56c4" />
+  <g transform="translate(16 16) scale(4)" fill="none" stroke="#fff" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8" />
+  </g>
+</svg>
