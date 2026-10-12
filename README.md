@@ -34,7 +34,9 @@ bun run typecheck  # Check types without writing dist/
 bun run lint       # ESLint over src/, scripts/ and tests/
 bun run format     # Format with Prettier
 bun run test       # Build, then run the Node test suite
-bun run build:firefox  # Build with the Firefox manifest variant
+bun run build:firefox    # Build with the Firefox manifest variant
+bun run package:chrome   # Build, then zip dist/ to artifacts/*-chrome.zip
+bun run package:firefox  # Build, then zip dist/ to artifacts/*-firefox.xpi
 ```
 
 Run `bun run build` after changing static assets or the manifest.
@@ -66,6 +68,12 @@ Then:
 3. Choose `dist/manifest.json`.
 
 Temporary add-ons are removed when Firefox restarts.
+
+To publish on [addons.mozilla.org](https://addons.mozilla.org/developers/),
+upload the `.xpi` produced by `bun run package:firefox`. AMO only accepts
+`.zip`, `.xpi` and `.crx` files — uploading the unpacked `dist/` folder, or an
+archive with any other name, is rejected with
+"Your add-on should end with .zip, .xpi or .crx".
 
 ## Export and import
 

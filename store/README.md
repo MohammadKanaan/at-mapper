@@ -65,6 +65,7 @@ writing surface for the content-script shots, plus `stage-popup.html` and
 ## Submission checklist
 
 - [ ] `bun run build` and `bun run test` pass.
+- [ ] `bun run package:chrome` and upload `artifacts/*-chrome.zip`.
 - [ ] Upload `icons/icon-128.png` as the store icon.
 - [ ] Upload `screenshots/01` through `05` in numeric order.
 - [ ] Upload `promo/small-tile-440x280.png`, and the marquee if featured.

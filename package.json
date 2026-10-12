@@ -14,6 +14,8 @@
     "compile": "tsc",
     "build": "bun run clean && bun run make-icons && bun run compile && bun run copy-static",
     "build:firefox": "bun run clean && bun run make-icons && bun run compile && node scripts/copy-static.mjs --target=firefox",
+    "package:chrome": "bun run build && node scripts/package.mjs --target=chrome",
+    "package:firefox": "bun run build:firefox && node scripts/package.mjs --target=firefox",
     "test": "bun run build && node --test tests/*.test.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
