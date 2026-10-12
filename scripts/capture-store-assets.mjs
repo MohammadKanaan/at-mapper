@@ -340,10 +340,7 @@ async function main() {
     await stage.setViewportSize({ width: 1280, height: 800 });
     await stage.goto(`${origin}/stage-popup.html`);
     await stage.waitForFunction(
-      () => {
-        const img = document.querySelector("img.popup");
-        return Boolean(img?.complete && img.naturalWidth > 0);
-      },
+      () => [...document.images].every((img) => img.complete && img.naturalWidth > 0),
       null,
       { timeout: 8000 },
     );
@@ -355,7 +352,10 @@ async function main() {
     await promo.setViewportSize({ width: 440, height: 280 });
     await promo.goto(`${origin}/promo.html?size=small`);
     await promo.waitForFunction(
-      () => document.querySelector(".mark")?.textContent === "@",
+      () => {
+        const img = document.querySelector("img.mark");
+        return Boolean(img?.complete && img.naturalWidth > 0);
+      },
       null,
       { timeout: 8000 },
     );
@@ -364,10 +364,7 @@ async function main() {
     await promo.setViewportSize({ width: 1400, height: 560 });
     await promo.goto(`${origin}/promo.html?size=marquee`);
     await promo.waitForFunction(
-      () => {
-        const img = document.querySelector("img.popup");
-        return Boolean(img?.complete && img.naturalWidth > 0);
-      },
+      () => [...document.images].every((img) => img.complete && img.naturalWidth > 0),
       null,
       { timeout: 8000 },
     );

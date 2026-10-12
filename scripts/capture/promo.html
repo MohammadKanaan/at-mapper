@@ -29,10 +29,8 @@
       .tile { width: 100%; height: 100%; }
       .brand { display: flex; align-items: center; }
       .mark {
-        display: grid;
-        place-items: center;
-        font-weight: 750;
-        line-height: 1;
+        display: block;
+        flex: none;
       }
       .word { font-weight: 750; letter-spacing: -0.03em; line-height: 1; }
       .example {
@@ -53,10 +51,6 @@
       [data-size="small"] .mark {
         width: 34px;
         height: 34px;
-        background: #ffffff;
-        color: var(--accent);
-        border-radius: 10px;
-        font-size: 21px;
       }
       [data-size="small"] .word { font-size: 31px; color: #ffffff; }
       [data-size="small"] .tagline {
@@ -88,10 +82,6 @@
       [data-size="marquee"] .mark {
         width: 46px;
         height: 46px;
-        background: var(--accent);
-        color: #ffffff;
-        border-radius: 13px;
-        font-size: 28px;
       }
       [data-size="marquee"] .word { font-size: 27px; color: var(--accent-strong); }
       [data-size="marquee"] .headline {
@@ -132,7 +122,7 @@
     <div class="tile">
       <div class="copy">
         <div class="brand">
-          <span class="mark" aria-hidden="true">@</span>
+          <img class="mark" src="/icon.png" alt="" aria-hidden="true" />
           <span class="word">mapper</span>
         </div>
         <h1 class="headline">Manage your shortcuts<br />on the go.</h1>

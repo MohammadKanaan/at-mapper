@@ -41,14 +41,8 @@
       .mark {
         width: 44px;
         height: 44px;
-        display: grid;
-        place-items: center;
-        background: var(--accent);
-        color: #ffffff;
-        border-radius: 13px;
-        font-size: 27px;
-        font-weight: 750;
-        line-height: 1;
+        display: block;
+        flex: none;
       }
       .word { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; color: var(--accent-strong); }
       h1 { margin: 0; font-size: 45px; line-height: 1.04; letter-spacing: -0.04em; font-weight: 750; }
@@ -76,7 +70,7 @@
     <div class="stage">
       <div class="copy">
         <div class="brand">
-          <span class="mark" aria-hidden="true">@</span>
+          <img class="mark" src="/icon.png" alt="" aria-hidden="true" />
           <span class="word">mapper</span>
         </div>
         <h1>Manage your shortcuts<br />on the go.</h1>
