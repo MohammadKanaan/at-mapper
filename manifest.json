@@ -72,7 +72,7 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "at-mapper@local.extension",
+      "id": "at-mapper@mohammadkanaan.dev",
       "strict_min_version": "121.0"
     }
   }
