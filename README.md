@@ -2,13 +2,16 @@
 
 @mapper is a cross-browser WebExtension that expands shortcuts such as `@word` into saved text from an autocomplete menu. It supports text inputs, textareas, and contenteditable editors on regular web pages.
 
+## How To Get
+- **Firefox**: [@mapper extension](https://addons.mozilla.org/en-US/firefox/addon/at-mapper/)
+- **Chrome**: requires manual installation.
+
 ## Features
 
 - Configurable trigger character and case-sensitive matching
-- Keyboard navigation, inline mapping creation, and replacement
+- Keyboard navigation, inline mapping creation/replacement
 - Mapping management, import, and export
 - Global enabled setting with per-hostname overrides
-- Light, dark, and system appearance modes
 
 ## Requirements
 
@@ -68,12 +71,6 @@ Then:
 3. Choose `dist/manifest.json`.
 
 Temporary add-ons are removed when Firefox restarts.
-
-To publish on [addons.mozilla.org](https://addons.mozilla.org/developers/),
-upload the `.xpi` produced by `bun run package:firefox`. AMO only accepts
-`.zip`, `.xpi` and `.crx` files — uploading the unpacked `dist/` folder, or an
-archive with any other name, is rejected with
-"Your add-on should end with .zip, .xpi or .crx".
 
 ## Export and import
 
