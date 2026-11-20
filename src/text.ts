@@ -67,17 +67,37 @@ function getTextBeforeCaretContenteditable(el: HTMLElement): string {
   return text;
 }
 
-function findDomPoint(el: HTMLElement, charOffset: number): { node: Node; offset: number } | null {
+/**
+ * Builds a range covering the `length` text characters that end at the caret.
+ * A token has no whitespace, so it never spans a line break and walking back
+ * over text nodes alone matches the text model in getTextBeforeCaretContenteditable.
+ */
+function tokenRangeBeforeCaret(el: HTMLElement, length: number): Range | null {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  const caret = sel.getRangeAt(0);
+  const pre = document.createRange();
+  pre.selectNodeContents(el);
+  pre.setEnd(caret.endContainer, caret.endOffset);
+
+  const nodes: Text[] = [];
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-  let acc = 0;
   let n: Node | null;
   while ((n = walker.nextNode())) {
-    const tn = n as Text;
-    const len = tn.length;
-    if (acc + len >= charOffset) {
-      return { node: tn, offset: charOffset - acc };
+    if (pre.intersectsNode(n)) nodes.push(n as Text);
+  }
+
+  let remaining = length;
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const tn = nodes[i];
+    const end = tn === caret.endContainer ? caret.endOffset : tn.length;
+    if (end >= remaining) {
+      const r = document.createRange();
+      r.setStart(tn, end - remaining);
+      r.setEnd(caret.endContainer, caret.endOffset);
+      return r;
     }
-    acc += len;
+    remaining -= end;
   }
   return null;
 }
@@ -98,6 +118,11 @@ export function getTokenBeforeCaret(el: HTMLElement, kind: EditorKind, trigger: 
   const word = m[1];
   const start = caretPos - m[0].length;
   const end = caretPos;
+  if (kind === "contenteditable") {
+    const range = tokenRangeBeforeCaret(el, m[0].length);
+    if (!range) return null;
+    return { trigger, word, start, end, range };
+  }
   return { trigger, word, start, end };
 }
 
@@ -119,13 +144,13 @@ export function replaceToken(el: HTMLElement, kind: EditorKind, token: TokenCont
     return true;
   }
 
-  const startPt = findDomPoint(el, token.start);
-  const endPt = findDomPoint(el, token.end);
-  if (!startPt || !endPt) return false;
-
-  const r = document.createRange();
-  r.setStart(startPt.node, startPt.offset);
-  r.setEnd(endPt.node, endPt.offset);
+  // The range is live, so edits since detection move or collapse it. Only
+  // replace when it still covers exactly the token, never neighbouring text.
+  const live = token.range;
+  if (!live || !el.contains(live.commonAncestorContainer) || live.toString() !== token.trigger + token.word) {
+    return false;
+  }
+  const r = live.cloneRange();
   const sel = window.getSelection();
   if (!sel) return false;
   sel.removeAllRanges();
