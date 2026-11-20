@@ -47,6 +47,19 @@ Run `bun run build` after changing static assets or the manifest.
 Modules imported (directly or transitively) by `content.js` must also be listed in
 `web_accessible_resources` in `manifest.json`; the test suite fails if one is missing.
 
+## Release
+
+Set the version in `manifest.json` and `package.json`, run `bun run check`, then
+commit `release: X.Y.Z` and tag `X.Y.Z`:
+
+```bash
+bun run version 1.1.0
+git push origin main && git push origin 1.1.0
+```
+
+Pushing the tag runs the release workflow. It builds the Chrome `.zip` and the
+Firefox `.xpi` and attaches both to a GitHub release.
+
 ## Load the extension
 
 ### Chrome, Edge, Brave, and other Chromium browsers
