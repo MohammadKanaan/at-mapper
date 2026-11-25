@@ -64,4 +64,10 @@ export interface TokenContext {
   word: string;
   start: number;
   end: number;
+  /**
+   * Contenteditable only: the token's live DOM range, captured from the caret
+   * at detection time. `start`/`end` count a "\n" per line break, so they
+   * can't be mapped back onto text nodes.
+   */
+  range?: Range;
 }
